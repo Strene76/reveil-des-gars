@@ -4,7 +4,7 @@
     <base href="https://api.websim.creation.engine/" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planning de Réveil Multi-utilisateurs</title>
+    <title>Planning de Réveil de Nathan et Lucas</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -21,10 +21,10 @@
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            max-width: 800px;
+            max-width: 600px;
             width: 100%;
         }
-        h1, h2 {
+        h1 {
             color: #4a90e2;
             text-align: center;
         }
@@ -61,23 +61,11 @@
             background-color: #4a90e2;
             color: white;
         }
-        #userManagement {
-            margin-bottom: 20px;
-        }
-        input, button {
-            margin: 5px;
-            padding: 5px;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Planning de Réveil Multi-utilisateurs</h1>
-        <div id="userManagement">
-            <h2>Gestion des utilisateurs</h2>
-            <input type="text" id="newUserInput" placeholder="Nom du nouvel utilisateur">
-            <button onclick="addUser()">Ajouter un utilisateur</button>
-        </div>
+        <h1>Planning de Réveil de Nathan et Lucas</h1>
         <div class="schedule" id="wake-schedule">
             <!-- Day rows will be inserted here by JavaScript -->
         </div>
@@ -110,7 +98,7 @@
 
         const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
         const times = ['8h', '9h'];
-        let users = [];
+        const users = ['Nathan', 'Lucas'];
 
         function initializeSchedule() {
             const schedule = document.getElementById('wake-schedule');
@@ -157,32 +145,15 @@
             database.ref('schedules/' + user + '/' + day).set(time);
         }
 
-        function addUser() {
-            const newUserInput = document.getElementById('newUserInput');
-            const newUser = newUserInput.value.trim();
-            if (newUser && !users.includes(newUser)) {
-                users.push(newUser);
-                newUserInput.value = '';
-                initializeSchedule();
-                // Save new user to Firebase
-                database.ref('users').set(users);
-            }
-        }
-
         // Load initial data from Firebase
         function loadInitialData() {
-            database.ref('users').once('value').then(snapshot => {
-                users = snapshot.val() || [];
-                initializeSchedule();
-                
-                // Load schedules for each user
-                users.forEach(user => {
-                    database.ref('schedules/' + user).once('value').then(snapshot => {
-                        const userSchedule = snapshot.val() || {};
-                        for (let day in userSchedule) {
-                            selectTime(user, day, userSchedule[day]);
-                        }
-                    });
+            initializeSchedule(); // Initialize the schedule first
+            users.forEach(user => {
+                database.ref('schedules/' + user).once('value').then(snapshot => {
+                    const userSchedule = snapshot.val() || {};
+                    for (let day in userSchedule) {
+                        selectTime(user, day, userSchedule[day]);
+                    }
                 });
             });
         }
@@ -197,11 +168,6 @@
             for (let day in schedule) {
                 selectTime(user, day, schedule[day]);
             }
-        });
-
-        database.ref('users').on('value', (snapshot) => {
-            users = snapshot.val() || [];
-            initializeSchedule();
         });
     </script>
 </body>
