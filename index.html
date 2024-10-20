@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <base href="https://api.websim.creation.engine/" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planning de Réveil Multi-utilisateurs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 800px;
+            width: 100%;
+        }
+        h1, h2 {
+            color: #4a90e2;
+            text-align: center;
+        }
+        .schedule {
+            margin-bottom: 20px;
+        }
+        .day-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+        .day-name {
+            font-weight: bold;
+            width: 100px;
+        }
+        .time-select {
+            display: flex;
+            gap: 10px;
+        }
+        .time-button {
+            padding: 5px 10px;
+            border: 2px solid #4a90e2;
+            background-color: white;
+            color: #4a90e2;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .time-button.selected {
+            background-color: #4a90e2;
+            color: white;
+        }
+        #userManagement {
+            margin-bottom: 20px;
+        }
+        input, button {
+            margin: 5px;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Planning de Réveil Multi-utilisateurs</h1>
+        <div id="userManagement">
+            <h2>Gestion des utilisateurs</h2>
+            <input type="text" id="newUserInput" placeholder="Nom du nouvel utilisateur">
+            <button onclick="addUser()">Ajouter un utilisateur</button>
+        </div>
+        <div class="schedule" id="wake-schedule">
+            <!-- Day rows will be inserted here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+
+    <!-- Add Firebase products that you want to use -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+
+    <script>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            // TODO: Replace with your Firebase project configuration
+            apiKey: "AIzaSyDbRPnzF8XulzkiccnfYMER2x7aZWw41gE",
+  authDomain: "reveil-des-gars.firebaseapp.com",
+  databaseURL: "https://reveil-des-gars-default-rtdb.firebaseio.com",
+  projectId: "reveil-des-gars",
+  storageBucket: "reveil-des-gars.appspot.com",
+  messagingSenderId: "431758144374",
+  appId: "1:431758144374:web:a4b2488f6dd47a6c378057
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Get a reference to the database service
+        const database = firebase.database();
+
+        const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
+        const times = ['8h', '9h'];
+        let users = [];
+
+        function initializeSchedule() {
+            const schedule = document.getElementById('wake-schedule');
+            schedule.innerHTML = ''; // Clear existing schedule
+
+            days.forEach(day => {
+                const dayRow = document.createElement('div');
+                dayRow.className = 'day-row';
+                let dayContent = `<span class="day-name">${day}</span>`;
+
+                users.forEach(user => {
+                    dayContent += `
+                        <div>
+                            <label>${user}: </label>
+                            <div class="time-select" id="${user}-${day}">
+                                ${createTimeButtons(user, day)}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                dayRow.innerHTML = dayContent;
+                schedule.appendChild(dayRow);
+            });
+        }
+
+        function createTimeButtons(user, day) {
+            return times.map(time => 
+                `<button class="time-button" onclick="selectTime('${user}', '${day}', '${time}')">${time}</button>`
+            ).join('');
+        }
+
+        function selectTime(user, day, time) {
+            const buttons = document.querySelectorAll(`#${user}-${day} .time-button`);
+            buttons.forEach(button => {
+                if (button.textContent === time) {
+                    button.classList.add('selected');
+                } else {
+                    button.classList.remove('selected');
+                }
+            });
+
+            // Save to Firebase
+            database.ref('schedules/' + user + '/' + day).set(time);
+        }
+
+        function addUser() {
+            const newUserInput = document.getElementById('newUserInput');
+            const newUser = newUserInput.value.trim();
+            if (newUser && !users.includes(newUser)) {
+                users.push(newUser);
+                newUserInput.value = '';
+                initializeSchedule();
+                // Save new user to Firebase
+                database.ref('users').set(users);
+            }
+        }
+
+        // Load initial data from Firebase
+        function loadInitialData() {
+            database.ref('users').once('value').then(snapshot => {
+                users = snapshot.val() || [];
+                initializeSchedule();
+                
+                // Load schedules for each user
+                users.forEach(user => {
+                    database.ref('schedules/' + user).once('value').then(snapshot => {
+                        const userSchedule = snapshot.val() || {};
+                        for (let day in userSchedule) {
+                            selectTime(user, day, userSchedule[day]);
+                        }
+                    });
+                });
+            });
+        }
+
+        // Initialize the app
+        loadInitialData();
+
+        // Listen for changes in the database
+        database.ref('schedules').on('child_changed', (snapshot) => {
+            const user = snapshot.key;
+            const schedule = snapshot.val();
+            for (let day in schedule) {
+                selectTime(user, day, schedule[day]);
+            }
+        });
+
+        database.ref('users').on('value', (snapshot) => {
+            users = snapshot.val() || [];
+            initializeSchedule();
+        });
+    </script>
+</body>
+</html>
