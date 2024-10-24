@@ -16,8 +16,7 @@
             --card-background: rgba(255, 255, 255, 0.9);
             --button-background: #edf2f7;
             --selected-color: #10b981;
-            --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .dark-mode {
@@ -29,54 +28,50 @@
             --card-background: rgba(26, 32, 44, 0.9);
             --button-background: #2d3748;
             --selected-color: #10b981;
-            --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.15);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
             color: var(--text-color);
-            line-height: 1.5;
-            padding: 16px;
+            line-height: 1.4;
             min-height: 100vh;
+            padding: 8px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            transition: var(--transition);
+            transition: background-color 0.3s;
         }
 
         .container {
             background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
-            border-radius: 20px;
-            padding: 16px;
+            border-radius: 16px;
+            padding: 12px 8px;
             box-shadow: var(--box-shadow);
-            max-width: 100%;
             width: 100%;
-            position: relative;
-            overflow: hidden;
+            margin-top: 40px;
         }
 
         .content-wrapper {
             background: var(--card-background);
-            border-radius: 16px;
-            padding: 16px;
-            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 12px 8px;
         }
 
         h1 {
             color: var(--text-color);
             text-align: center;
-            margin-bottom: 20px;
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 600;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
             position: relative;
-            padding-bottom: 10px;
         }
 
         h1::after {
@@ -85,63 +80,57 @@
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 60px;
-            height: 3px;
+            width: 40px;
+            height: 2px;
             background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
-            border-radius: 2px;
+            border-radius: 1px;
         }
 
         .schedule {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 8px;
         }
 
         .day-card {
             background: var(--card-background);
-            border-radius: 12px;
-            padding: 12px;
+            border-radius: 10px;
+            padding: 10px 8px;
             box-shadow: var(--box-shadow);
-            transform: translateY(0);
-            transition: var(--transition);
-        }
-
-        .day-card:hover {
-            transform: translateY(-2px);
         }
 
         .day-name {
+            font-size: 16px;
             font-weight: 600;
-            font-size: 18px;
-            color: var(--text-color);
             margin-bottom: 8px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .day-name i {
+            font-size: 14px;
             color: var(--gradient-end);
         }
 
         .user-schedules {
             display: flex;
-            justify-content: space-around;
-            padding: 4px 0;
+            flex-direction: column;
+            gap: 8px;
         }
 
         .user-schedule {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            padding: 8px;
-            border-radius: 8px;
             background: var(--button-background);
-            width: 45%;
+            border-radius: 8px;
+            padding: 8px;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            align-items: center;
+            gap: 10px;
         }
 
         .user-name {
+            font-size: 14px;
             font-weight: 500;
             display: flex;
             align-items: center;
@@ -149,65 +138,71 @@
         }
 
         .user-name i {
-            font-size: 14px;
+            font-size: 12px;
             color: var(--gradient-end);
         }
 
         .time-select {
             display: flex;
+            justify-content: flex-end;
             gap: 8px;
         }
 
         .time-button {
-            padding: 6px 12px;
+            min-width: 44px;
+            height: 32px;
             border: none;
             background: var(--button-background);
             color: var(--text-color);
-            border-radius: 20px;
-            cursor: pointer;
+            border-radius: 16px;
             font-size: 14px;
             font-weight: 500;
-            min-width: 45px;
-            transition: var(--transition);
-            border: 2px solid transparent;
-        }
-
-        .time-button:hover {
-            border-color: var(--gradient-end);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            touch-action: manipulation;
         }
 
         .time-button.selected {
             background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
             color: white;
-            transform: scale(1.05);
         }
 
         #darkModeToggle {
             position: fixed;
-            top: 16px;
-            right: 16px;
-            padding: 8px 16px;
+            top: 8px;
+            right: 8px;
+            padding: 8px 12px;
+            border-radius: 20px;
             background: var(--card-background);
             color: var(--text-color);
             border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
+            font-size: 13px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             box-shadow: var(--box-shadow);
-            transition: var(--transition);
+            touch-action: manipulation;
         }
 
-        #darkModeToggle:hover {
-            transform: translateY(-2px);
+        #darkModeToggle i {
+            font-size: 14px;
         }
 
-        @media (min-width: 640px) {
+        @media (min-width: 768px) {
             .container {
                 max-width: 600px;
+                margin: 20px auto;
+            }
+            
+            .user-schedules {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+
+            .user-schedule {
+                width: 48%;
             }
         }
     </style>
@@ -215,7 +210,7 @@
 <body>
     <button id="darkModeToggle">
         <i class="fas fa-moon"></i>
-        <span>Mode Sombre</span>
+        <span>Mode</span>
     </button>
     <div class="container">
         <div class="content-wrapper">
@@ -226,12 +221,10 @@
         </div>
     </div>
 
-    <!-- Firebase App (the core Firebase SDK) -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
 
     <script>
-        // Firebase configuration
         const firebaseConfig = {
             // TODO: Replace with your Firebase project configuration
             apiKey: "AIzaSyDvrtMZyj2x_a9bRu0F74kbLen2W3B7YI8",
@@ -251,14 +244,6 @@
         const times = ['8h', '9h'];
         const users = ['Nathan', 'Lucas'];
 
-        const dayIcons = {
-            'Lundi': 'calendar-day',
-            'Mardi': 'calendar-day',
-            'Mercredi': 'calendar-day',
-            'Jeudi': 'calendar-day',
-            'Vendredi': 'calendar-day'
-        };
-
         function initializeSchedule() {
             const schedule = document.getElementById('wake-schedule');
             schedule.innerHTML = '';
@@ -268,7 +253,7 @@
                 dayCard.className = 'day-card';
                 let dayContent = `
                     <div class="day-name">
-                        <i class="fas fa-${dayIcons[day]}"></i>
+                        <i class="fas fa-calendar-day"></i>
                         ${day}
                     </div>
                     <div class="user-schedules">
@@ -340,17 +325,17 @@
 
         if (localStorage.getItem('darkMode') === 'enabled') {
             body.classList.add('dark-mode');
-            darkModeToggle.innerHTML = '<i class="fas fa-sun"></i><span>Mode Normal</span>';
+            darkModeToggle.innerHTML = '<i class="fas fa-sun"></i><span>Mode</span>';
         }
 
         darkModeToggle.addEventListener('click', () => {
             body.classList.toggle('dark-mode');
             if (body.classList.contains('dark-mode')) {
                 localStorage.setItem('darkMode', 'enabled');
-                darkModeToggle.innerHTML = '<i class="fas fa-sun"></i><span>Mode Normal</span>';
+                darkModeToggle.innerHTML = '<i class="fas fa-sun"></i><span>Mode</span>';
             } else {
                 localStorage.setItem('darkMode', null);
-                darkModeToggle.innerHTML = '<i class="fas fa-moon"></i><span>Mode Sombre</span>';
+                darkModeToggle.innerHTML = '<i class="fas fa-moon"></i><span>Mode</span>';
             }
         });
     </script>
