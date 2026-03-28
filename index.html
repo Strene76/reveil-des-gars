@@ -2,762 +2,343 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Générateur de Repas IA</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Générateur de Repas</title>
 <style>
   :root {
-    --bg: #0f1117;
-    --surface: #181c27;
-    --surface2: #1f2436;
-    --accent: #f5a623;
-    --accent2: #e07b39;
-    --green: #4caf82;
-    --text: #eef0f6;
-    --muted: #7a8099;
-    --border: #2a3048;
-    --glow: rgba(245,166,35,0.15);
+    --bg:#f7f4ef; --card:#fff; --accent:#c8522a; --accent2:#e8a87c;
+    --text:#1a1208; --muted:#8a7d6b; --border:#e5ddd0; --tag:#f5ede0;
   }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'Outfit', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    padding-bottom: 60px;
-  }
-
-  /* BG GRAIN */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.6;
-  }
-
-  /* HEADER */
-  header {
-    position: relative;
-    padding: 40px 24px 32px;
-    text-align: center;
-    overflow: hidden;
-    z-index: 1;
-  }
-  header::after {
-    content: '';
-    position: absolute;
-    top: -60px; left: 50%; transform: translateX(-50%);
-    width: 400px; height: 200px;
-    background: radial-gradient(ellipse, rgba(245,166,35,0.18) 0%, transparent 70%);
-    pointer-events: none;
-  }
-  .header-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(245,166,35,0.12);
-    border: 1px solid rgba(245,166,35,0.3);
-    border-radius: 20px;
-    padding: 4px 12px;
-    font-size: 0.72rem;
-    font-weight: 500;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 14px;
-  }
-  .header-badge::before { content: '●'; font-size: 0.5rem; animation: pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-  h1 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 2.6rem;
-    font-weight: 600;
-    line-height: 1.1;
-    letter-spacing: -0.5px;
-  }
-  h1 em { font-style: italic; color: var(--accent); }
-  header p {
-    color: var(--muted);
-    font-size: 0.9rem;
-    margin-top: 8px;
-    font-weight: 300;
-  }
-
-  /* TABS */
-  .tabs {
-    display: flex;
-    max-width: 560px;
-    margin: 0 auto 24px;
-    padding: 0 16px;
-    gap: 8px;
-    position: relative;
-    z-index: 1;
-  }
-  .tab {
-    flex: 1;
-    padding: 11px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background: var(--surface);
-    font-family: 'Outfit', sans-serif;
-    font-size: 0.88rem;
-    font-weight: 500;
-    color: var(--muted);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .tab.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #0f1117;
-    font-weight: 600;
-  }
-
-  /* CONTENT */
-  .content {
-    max-width: 560px;
-    margin: 0 auto;
-    padding: 0 16px;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* SECTIONS */
-  .section { display: none; }
-  .section.visible { display: block; }
-
-  /* FILTERS */
-  .filters {
-    display: flex;
-    gap: 7px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-  }
-  .filter-btn {
-    padding: 7px 14px;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    background: var(--surface);
-    font-family: 'Outfit', sans-serif;
-    font-size: 0.8rem;
-    color: var(--muted);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .filter-btn.active {
-    border-color: var(--accent);
-    color: var(--accent);
-    background: rgba(245,166,35,0.08);
-  }
-
-  /* PROMPT CUSTOM */
-  .custom-prompt {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  .custom-input {
-    flex: 1;
-    padding: 11px 14px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    font-family: 'Outfit', sans-serif;
-    font-size: 0.85rem;
-    color: var(--text);
-    outline: none;
-    transition: border 0.2s;
-  }
-  .custom-input::placeholder { color: var(--muted); }
-  .custom-input:focus { border-color: var(--accent); }
-
-  /* MAIN BUTTON */
-  .btn-main {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
-    padding: 15px;
-    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
-    color: #0f1117;
-    border: none;
-    border-radius: 12px;
-    font-family: 'Outfit', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.25s;
-    box-shadow: 0 4px 20px rgba(245,166,35,0.25);
-    margin-bottom: 20px;
-  }
-  .btn-main:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(245,166,35,0.35); }
-  .btn-main:active { transform: translateY(0); }
-  .btn-main:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
-  /* MEAL CARD */
-  .meal-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    overflow: hidden;
-    margin-bottom: 16px;
-    animation: fadeUp 0.4s ease both;
-  }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .meal-card-top {
-    padding: 22px 22px 18px;
-    background: linear-gradient(135deg, var(--surface2) 0%, #1a1f32 100%);
-    border-bottom: 1px solid var(--border);
-    position: relative;
-    overflow: hidden;
-  }
-  .meal-card-top::before {
-    content: '';
-    position: absolute;
-    top: -30px; right: -30px;
-    width: 120px; height: 120px;
-    background: radial-gradient(ellipse, var(--glow), transparent 70%);
-  }
-  .meal-label {
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 8px;
-  }
-  .meal-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.9rem;
-    font-weight: 600;
-    line-height: 1.15;
-  }
-  .meal-meta-row {
-    display: flex;
-    gap: 16px;
-    margin-top: 10px;
-  }
-  .meta-chip {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.8rem;
-    color: var(--muted);
-  }
-
-  .meal-card-body { padding: 18px 22px; }
-
-  .section-label {
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 10px;
-    margin-top: 16px;
-  }
-  .section-label:first-child { margin-top: 0; }
-
-  .ingredients-wrap {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 6px;
-  }
-  .ing-tag {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 4px 11px;
-    font-size: 0.8rem;
-    color: var(--text);
-  }
-
-  .recipe-steps { list-style: none; }
-  .recipe-steps li {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 10px;
-    font-size: 0.87rem;
-    line-height: 1.5;
-    color: #c8ccdb;
-  }
-  .step-num {
-    flex-shrink: 0;
-    width: 22px; height: 22px;
-    background: rgba(245,166,35,0.15);
-    border: 1px solid rgba(245,166,35,0.3);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: var(--accent);
-    margin-top: 1px;
-  }
-
-  /* PLANNING */
-  .week-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-  }
-  .week-toolbar h2 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.4rem;
-    font-weight: 600;
-  }
-
-  .day-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    margin-bottom: 10px;
-    overflow: hidden;
-    animation: fadeUp 0.35s ease both;
-  }
-  .day-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 13px 16px;
-    background: var(--surface2);
-    cursor: pointer;
-    border-bottom: 1px solid var(--border);
-  }
-  .day-name { font-weight: 600; font-size: 0.95rem; }
-  .day-status { font-size: 0.75rem; color: var(--muted); }
-
-  .day-slots {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1px;
-    background: var(--border);
-  }
-  .day-slot {
-    background: var(--surface);
-    padding: 12px 14px;
-  }
-  .slot-label {
-    font-size: 0.65rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 5px;
-  }
-  .slot-name {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1rem;
-    font-weight: 600;
-    line-height: 1.3;
-    color: var(--text);
-  }
-  .slot-detail {
-    font-size: 0.73rem;
-    color: var(--muted);
-    margin-top: 3px;
-    line-height: 1.4;
-  }
-  .slot-time {
-    font-size: 0.73rem;
-    color: var(--accent);
-    margin-top: 2px;
-  }
-
-  /* LOADER */
-  .loader-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    padding: 40px 20px;
-    color: var(--muted);
-    font-size: 0.88rem;
-  }
-  .loader-ring {
-    width: 40px; height: 40px;
-    border: 3px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* EMPTY */
-  .empty {
-    text-align: center;
-    padding: 50px 20px;
-    color: var(--muted);
-    font-size: 0.9rem;
-  }
-  .empty .big { font-size: 2.5rem; margin-bottom: 12px; }
-
-  /* ERROR */
-  .error-box {
-    background: rgba(220,60,60,0.1);
-    border: 1px solid rgba(220,60,60,0.3);
-    border-radius: 10px;
-    padding: 14px 16px;
-    font-size: 0.85rem;
-    color: #f08080;
-    margin-bottom: 16px;
-  }
-
-  /* WEEK PROGRESS */
-  .week-progress {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 16px;
-    margin-bottom: 16px;
-    display: none;
-  }
-  .week-progress.visible { display: block; }
-  .progress-label { font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; }
-  .progress-bar-wrap {
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-  .progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    border-radius: 2px;
-    transition: width 0.4s ease;
-    width: 0%;
-  }
-
-  /* ICON spin */
-  .icon-spin { display: inline-block; animation: spin 0.6s linear infinite; }
-
-  /* WEEK GRID EMPTY STATE */
-  .week-tip {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: rgba(245,166,35,0.07);
-    border: 1px solid rgba(245,166,35,0.2);
-    border-radius: 10px;
-    padding: 12px 14px;
-    font-size: 0.82rem;
-    color: var(--muted);
-    margin-bottom: 16px;
-  }
-  .week-tip span { color: var(--accent); font-size: 1rem; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:40px}
+  header{background:var(--accent);padding:28px 20px 22px;text-align:center}
+  header h1{font-size:1.8rem;color:#fff;font-weight:700;letter-spacing:-.5px}
+  header p{color:rgba(255,255,255,.75);font-size:.85rem;margin-top:5px}
+  .tabs{display:flex;max-width:540px;margin:18px auto 0;padding:0 14px;gap:8px}
+  .tab{flex:1;padding:10px;border:2px solid var(--border);border-radius:10px;background:var(--card);font-size:.85rem;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s}
+  .tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .content{max-width:540px;margin:18px auto 0;padding:0 14px}
+  .sec{display:none}.sec.on{display:block}
+  .filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .fb{padding:6px 13px;border:1.5px solid var(--border);border-radius:20px;background:var(--card);font-size:.78rem;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s}
+  .fb.on{border-color:var(--accent);color:var(--accent);background:#fff3ee}
+  .cinput{width:100%;padding:10px 14px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;font-size:.88rem;color:var(--text);outline:none;margin-bottom:10px}
+  .cinput:focus{border-color:var(--accent)}
+  .btn-gen{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer;margin-bottom:18px;transition:all .2s}
+  .btn-gen:hover{background:#b54522}
+  .btn-gen:active{transform:scale(.98)}
+  .meal-card{background:var(--card);border-radius:16px;box-shadow:0 3px 16px rgba(0,0,0,.08);overflow:hidden;margin-bottom:16px;animation:up .35s ease}
+  @keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  .mc-top{background:linear-gradient(135deg,var(--accent),#d4693e);padding:20px 18px 16px;color:#fff}
+  .mc-lbl{font-size:.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;opacity:.8;margin-bottom:6px}
+  .mc-name{font-size:1.6rem;font-weight:700;line-height:1.2}
+  .mc-meta{display:flex;gap:14px;margin-top:10px}
+  .mc-chip{font-size:.78rem;opacity:.85}
+  .mc-body{padding:16px 18px}
+  .slbl{font-size:.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:14px 0 8px}
+  .slbl:first-child{margin-top:0}
+  .tags{display:flex;flex-wrap:wrap;gap:6px}
+  .tag{background:var(--tag);border:1px solid var(--border);border-radius:16px;padding:4px 10px;font-size:.78rem}
+  .steps{list-style:none;display:flex;flex-direction:column;gap:8px}
+  .step{display:flex;gap:9px;font-size:.84rem;color:#555;line-height:1.55}
+  .sn{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:rgba(200,82,42,.12);border:1px solid rgba(200,82,42,.25);color:var(--accent);font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:2px}
+  .astuce{font-size:.82rem;color:#555;border-left:3px solid var(--accent2);padding:8px 11px;border-radius:0 8px 8px 0;background:#fffaf5}
+  .week-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .week-bar h2{font-size:1.2rem;font-weight:700}
+  .btn-sm{padding:9px 16px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:.82rem;font-weight:700;cursor:pointer}
+  .btn-sm:active{transform:scale(.97)}
+  .day-card{background:var(--card);border-radius:13px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:10px;overflow:hidden;animation:up .3s ease}
+  .dh{background:#faf6f2;padding:10px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+  .dn{font-size:.9rem;font-weight:700}
+  .ds{display:grid;grid-template-columns:1fr 1fr}
+  .dsl{padding:11px 13px}
+  .dsl:first-child{border-right:1px solid var(--border)}
+  .dll{font-size:.62rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+  .dln{font-size:.84rem;font-weight:600;line-height:1.3}
+  .dli{font-size:.72rem;color:var(--muted);margin-top:3px}
+  .empty{text-align:center;padding:36px 16px;color:var(--muted);font-size:.88rem;line-height:1.7}
+  .empty .ico{font-size:2rem;margin-bottom:10px}
+  .spin{display:inline-block;animation:sp .6s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-
 <header>
-  <div class="header-badge">IA · Powered by Claude</div>
-  <h1>Générateur de<br><em>Repas</em> Intelligent</h1>
-  <p>Recettes uniques générées à la demande par l'IA</p>
+  <h1>🍽️ Générateur de Repas</h1>
+  <p>40 recettes intégrées · Fonctionne hors ligne</p>
 </header>
-
 <div class="tabs">
-  <button class="tab active" onclick="switchTab('random')">🎲 Repas aléatoire</button>
-  <button class="tab" onclick="switchTab('week')">📅 Planning semaine</button>
+  <button class="tab active" onclick="sw('r')">🎲 Repas aléatoire</button>
+  <button class="tab" onclick="sw('w')">📅 Planning semaine</button>
 </div>
-
 <div class="content">
-
-  <!-- ALÉATOIRE -->
-  <div class="section visible" id="randomSection">
-
-    <div class="filters">
-      <button class="filter-btn active" onclick="setFilter(this,'tous')">Tous</button>
-      <button class="filter-btn" onclick="setFilter(this,'déjeuner')">🌞 Déjeuner</button>
-      <button class="filter-btn" onclick="setFilter(this,'dîner')">🌙 Dîner</button>
-      <button class="filter-btn" onclick="setFilter(this,'rapide')">⚡ Rapide</button>
-      <button class="filter-btn" onclick="setFilter(this,'végétarien')">🥗 Végétarien</button>
-      <button class="filter-btn" onclick="setFilter(this,'cuisine du monde')">🌍 Monde</button>
+  <div class="sec on" id="sr">
+    <div class="filters" style="margin-top:14px">
+      <button class="fb on" onclick="sf(this,'tous')">Tous</button>
+      <button class="fb" onclick="sf(this,'dejeuner')">🌞 Déjeuner</button>
+      <button class="fb" onclick="sf(this,'diner')">🌙 Dîner</button>
+      <button class="fb" onclick="sf(this,'rapide')">⚡ Rapide</button>
+      <button class="fb" onclick="sf(this,'vege')">🥗 Végétarien</button>
+      <button class="fb" onclick="sf(this,'monde')">🌍 Monde</button>
     </div>
-
-    <div class="custom-prompt">
-      <input class="custom-input" id="customPrompt" type="text" placeholder="Ex : plat avec du saumon, recette italienne…">
-    </div>
-
-    <button class="btn-main" id="btnRandom" onclick="generateRandom()">
-      <span id="randomIcon">✦</span> Générer un repas
-    </button>
-
-    <div id="randomResult">
-      <div class="empty">
-        <div class="big">🍽️</div>
-        Cliquez pour découvrir votre prochain repas généré par l'IA
-      </div>
-    </div>
-
+    <input class="cinput" id="cp" type="text" placeholder="Ex : saumon, pasta, wok…">
+    <button class="btn-gen" id="br" onclick="genR()"><span id="bri">✦</span> Générer un repas</button>
+    <div id="rr"><div class="empty"><div class="ico">🍽️</div>Appuyez sur Générer<br>pour découvrir votre prochain repas !</div></div>
   </div>
-
-  <!-- SEMAINE -->
-  <div class="section" id="weekSection">
-
-    <div class="week-toolbar">
+  <div class="sec" id="sw2">
+    <div class="week-bar" style="margin-top:14px">
       <h2>Planning de la semaine</h2>
-      <button class="btn-main" style="width:auto;padding:10px 18px;margin:0;font-size:0.85rem" id="btnWeek" onclick="generateWeek()">
-        <span id="weekIcon">🔄</span> Générer
-      </button>
+      <button class="btn-sm" onclick="genW()">🔄 Générer</button>
     </div>
-
-    <div class="week-tip">
-      <span>💡</span>
-      L'IA génère 7 jours de repas variés, déjeuner + dîner, avec ingrédients.
-    </div>
-
-    <div class="week-progress" id="weekProgress">
-      <div class="progress-label" id="progressLabel">Génération en cours…</div>
-      <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
-    </div>
-
-    <div id="weekGrid">
-      <div class="empty">
-        <div class="big">📅</div>
-        Générez votre planning pour la semaine !
-      </div>
-    </div>
-
+    <div id="wg"><div class="empty"><div class="ico">📅</div>Générez votre planning<br>pour la semaine !</div></div>
   </div>
-
 </div>
-
 <script>
-const API_URL = "https://api.anthropic.com/v1/messages";
-const MODEL = "claude-sonnet-4-20250514";
-const DAYS = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
+const DAYS=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
+let flt="tous";
 
-let currentFilter = "tous";
+const DB=[
+  {n:"Poulet rôti aux herbes",t:"dejeuner",dur:"45 min",niv:"Facile",tags:["dejeuner"],
+   ing:["Poulet entier","Herbes de Provence","Ail","Citron","Pommes de terre","Huile d'olive"],
+   steps:["Préchauffer le four à 200°C.","Frotter le poulet avec les herbes, l'ail écrasé et l'huile d'olive.","Disposer les pommes de terre en rondelles autour, arroser de jus de citron.","Enfourner 45 min en arrosant toutes les 15 min."],
+   astuce:"Couvrir d'alu les 20 premières minutes pour garder le moelleux."},
+  {n:"Quiche Lorraine",t:"dejeuner",dur:"55 min",niv:"Moyen",tags:["dejeuner"],
+   ing:["Pâte brisée","Lardons fumés","Œufs","Crème fraîche","Gruyère râpé","Noix de muscade"],
+   steps:["Foncer un moule avec la pâte brisée, piquer le fond.","Faire revenir les lardons sans matière grasse.","Battre les œufs avec la crème, sel, poivre et muscade.","Répartir lardons et gruyère sur la pâte, verser l'appareil.","Cuire 35 min à 180°C jusqu'à dorure."],
+   astuce:"Laisser tiédir 10 min avant de démouler pour une coupe nette."},
+  {n:"Risotto aux champignons",t:"dejeuner",dur:"35 min",niv:"Moyen",tags:["dejeuner","vege"],
+   ing:["Riz arborio","Champignons de Paris","Parmesan","Oignon","Bouillon de légumes","Beurre","Vin blanc"],
+   steps:["Faire suer l'oignon émincé dans le beurre.","Ajouter le riz, nacrer 2 min puis déglacer au vin blanc.","Incorporer le bouillon chaud louche par louche en remuant.","Ajouter les champignons sautés à mi-cuisson.","Mantecarer avec beurre et parmesan hors du feu."],
+   astuce:"Le secret : bouillon chaud et patience — ne jamais arrêter de remuer !"},
+  {n:"Salade Niçoise",t:"dejeuner",dur:"15 min",niv:"Facile",tags:["dejeuner","rapide"],
+   ing:["Thon en boîte","Œufs durs","Tomates cerises","Olives noires","Haricots verts","Anchois","Vinaigrette"],
+   steps:["Cuire les haricots verts al dente, refroidir.","Disposer tous les ingrédients en dôme dans un saladier.","Arroser de vinaigrette huile d'olive / vinaigre balsamique."],
+   astuce:"Ne jamais mélanger une niçoise — c'est tout l'art de la présentation."},
+  {n:"Gratin dauphinois",t:"dejeuner",dur:"70 min",niv:"Facile",tags:["dejeuner","vege"],
+   ing:["Pommes de terre","Crème liquide","Lait","Ail","Gruyère","Noix de muscade","Beurre"],
+   steps:["Éplucher et trancher finement les pommes de terre.","Frotter le plat à gratin avec l'ail puis beurrer.","Disposer les rondelles en couches, saler, poivrer, muscader.","Mélanger crème et lait, verser sur les pommes de terre.","Gratiner au four 60 min à 180°C."],
+   astuce:"Couvrir de papier alu les 40 premières minutes, retirer pour gratiner."},
+  {n:"Lasagnes bolognaise",t:"dejeuner",dur:"75 min",niv:"Moyen",tags:["dejeuner"],
+   ing:["Pâtes à lasagnes","Bœuf haché","Tomates concassées","Béchamel","Parmesan","Oignon","Carotte"],
+   steps:["Préparer la bolognaise : faire revenir oignon, carotte, viande. Ajouter tomates, mijoter 30 min.","Préparer une béchamel épaisse.","Alterner couches lasagnes / bolognaise / béchamel dans un plat.","Terminer par béchamel + parmesan râpé.","Cuire 35 min à 180°C."],
+   astuce:"Préparer la bolognaise la veille : elle est bien meilleure réchauffée."},
+  {n:"Omelette aux fines herbes",t:"dejeuner",dur:"10 min",niv:"Facile",tags:["dejeuner","rapide","vege"],
+   ing:["Œufs","Ciboulette","Estragon","Persil plat","Beurre","Sel","Poivre"],
+   steps:["Battre les œufs avec les herbes ciselées, sel et poivre.","Faire fondre le beurre dans une poêle à feu vif.","Verser les œufs, agiter la poêle en repliant les bords.","Plier l'omelette en deux dès qu'elle est baveuse à cœur."],
+   astuce:"Une omelette se mange baveuse — trop cuite elle devient caoutchouteuse."},
+  {n:"Croque-monsieur gratiné",t:"dejeuner",dur:"15 min",niv:"Facile",tags:["dejeuner","rapide"],
+   ing:["Pain de mie","Jambon blanc","Gruyère râpé","Béchamel","Beurre","Moutarde"],
+   steps:["Tartiner les tranches de pain de béchamel et moutarde.","Garnir de jambon et gruyère, refermer.","Beurrer l'extérieur du sandwich.","Faire dorer à la poêle ou passer 10 min au four à 200°C."],
+   astuce:"Un peu de muscade dans la béchamel fait toute la différence."},
+  {n:"Sole meunière",t:"dejeuner",dur:"20 min",niv:"Facile",tags:["dejeuner","rapide"],
+   ing:["Filets de sole","Farine","Beurre","Citron","Persil plat","Sel","Poivre"],
+   steps:["Fariner légèrement les filets de sole, secouer l'excédent.","Faire fondre le beurre à feu moyen jusqu'à noisette.","Saisir les filets 2 min de chaque côté.","Presser le citron, parsemer de persil ciselé."],
+   astuce:"Le beurre noisette donne toute la saveur — surveiller la couleur de près."},
+  {n:"Tarte aux légumes provençale",t:"dejeuner",dur:"50 min",niv:"Facile",tags:["dejeuner","vege"],
+   ing:["Pâte brisée","Courgettes","Poivrons","Tomates","Fromage de chèvre","Œufs","Herbes de Provence"],
+   steps:["Foncer un moule avec la pâte brisée.","Faire revenir les légumes en dés à l'huile d'olive.","Battre les œufs, ajouter les légumes et les herbes.","Verser sur la pâte, disposer des rondelles de chèvre.","Cuire 35 min à 180°C."],
+   astuce:"Précuire la pâte 10 min à blanc pour éviter le fond détrempé."},
+  {n:"Velouté de potiron",t:"diner",dur:"30 min",niv:"Facile",tags:["diner","vege"],
+   ing:["Potiron","Crème fraîche","Oignon","Bouillon de légumes","Noix de muscade","Graines de courge"],
+   steps:["Faire revenir l'oignon émincé dans le beurre.","Ajouter le potiron en dés, mouiller au bouillon, cuire 20 min.","Mixer finement, ajouter la crème, ajuster l'assaisonnement.","Servir avec graines de courge torréfiées."],
+   astuce:"Une pointe de gingembre frais râpé apporte une touche chaleureuse."},
+  {n:"Dos de cabillaud vapeur",t:"diner",dur:"20 min",niv:"Facile",tags:["diner","rapide"],
+   ing:["Dos de cabillaud","Légumes vapeur","Citron","Aneth","Beurre citronné","Sel","Poivre"],
+   steps:["Assaisonner le cabillaud sel, poivre, aneth.","Cuire à la vapeur 12 min selon épaisseur.","Préparer un beurre citronné fondu avec zeste de citron.","Servir avec les légumes vapeur, napper de beurre."],
+   astuce:"Le cabillaud est cuit quand la chair se détache en feuillets."},
+  {n:"Soupe de lentilles au cumin",t:"diner",dur:"35 min",niv:"Facile",tags:["diner","vege"],
+   ing:["Lentilles corail","Carottes","Céleri","Cumin","Tomates","Oignon","Coriandre fraîche"],
+   steps:["Faire revenir oignon, carottes et céleri en dés.","Ajouter les lentilles rincées, les tomates et le cumin.","Couvrir d'eau, cuire 25 min à feu moyen.","Mixer partiellement pour une texture crémeuse.","Garnir de coriandre fraîche."],
+   astuce:"Les lentilles corail ne nécessitent pas de trempage — gain de temps !"},
+  {n:"Filet de saumon teriyaki",t:"diner",dur:"25 min",niv:"Facile",tags:["diner","monde"],
+   ing:["Pavé de saumon","Sauce soja","Miel","Gingembre frais","Sésame","Riz basmati","Pak choï"],
+   steps:["Mélanger sauce soja, miel et gingembre râpé pour la marinade.","Faire mariner le saumon 15 min.","Saisir le saumon 3 min côté peau dans une poêle chaude.","Retourner, verser la marinade, caraméliser 2 min.","Servir sur riz, parsemer de sésame."],
+   astuce:"Ne pas trop cuire — le saumon doit rester rosé à cœur."},
+  {n:"Oeufs cocotte à la crème",t:"diner",dur:"15 min",niv:"Facile",tags:["diner","rapide","vege"],
+   ing:["Œufs","Crème fraîche","Jambon","Emmental","Ciboulette","Sel","Poivre"],
+   steps:["Préchauffer le four à 180°C.","Beurrer des ramequins, déposer jambon en dés.","Verser une cuillère de crème, casser l'œuf par-dessus.","Ajouter crème, fromage, ciboulette.","Cuire au bain-marie 12 min."],
+   astuce:"Surveiller la cuisson — le blanc doit être pris, le jaune encore coulant."},
+  {n:"Minestrone de légumes",t:"diner",dur:"40 min",niv:"Facile",tags:["diner","vege"],
+   ing:["Pâtes","Tomates","Haricots blancs","Carottes","Courgettes","Basilic","Parmesan"],
+   steps:["Faire revenir les légumes en dés à l'huile d'olive.","Ajouter tomates concassées et bouillon, mijoter 20 min.","Incorporer les haricots égouttés et les pâtes.","Cuire encore 10 min, rectifier l'assaisonnement.","Servir avec parmesan et basilic frais."],
+   astuce:"Ajouter une croûte de parmesan pendant la cuisson pour plus de saveur."},
+  {n:"Tartines avocat crevettes",t:"diner",dur:"10 min",niv:"Facile",tags:["diner","rapide"],
+   ing:["Pain complet","Avocat","Crevettes roses","Citron vert","Coriandre","Piment doux","Fleur de sel"],
+   steps:["Écraser l'avocat avec citron vert, sel et piment.","Toaster les tranches de pain.","Tartiner généreusement d'avocat.","Disposer les crevettes, parsemer de coriandre et fleur de sel."],
+   astuce:"Citronner l'avocat immédiatement pour éviter l'oxydation."},
+  {n:"Poisson à la provençale",t:"diner",dur:"35 min",niv:"Facile",tags:["diner"],
+   ing:["Filets de merlu","Tomates","Olives noires","Câpres","Ail","Herbes de Provence","Huile d'olive"],
+   steps:["Faire revenir l'ail dans l'huile d'olive.","Ajouter les tomates concassées, olives et câpres, mijoter 15 min.","Déposer les filets de poisson dans la sauce.","Couvrir et cuire 10 min à feu doux.","Parsemer d'herbes de Provence."],
+   astuce:"Le merlu peut être remplacé par tout poisson blanc à chair ferme."},
+  {n:"Pâtes carbonara",t:"tous",dur:"20 min",niv:"Moyen",tags:["rapide"],
+   ing:["Spaghettis","Guanciale ou lardons","Œufs","Pecorino","Poivre noir","Sel"],
+   steps:["Cuire les pâtes al dente dans l'eau très salée.","Faire revenir le guanciale à sec jusqu'à croustillant.","Mélanger œufs et pecorino râpé.","Hors du feu, mélanger pâtes, guanciale et crème d'œufs.","Ajouter de l'eau de cuisson pour lier, poivrer généreusement."],
+   astuce:"La vraie carbonara n'a pas de crème — c'est l'eau de cuisson qui lie."},
+  {n:"Pizza maison",t:"tous",dur:"45 min",niv:"Moyen",tags:[],
+   ing:["Pâte à pizza","Coulis de tomate","Mozzarella","Jambon","Champignons","Basilic","Origan"],
+   steps:["Étaler la pâte finement sur une surface farinée.","Étaler le coulis, laisser 2 cm de bord.","Disposer mozzarella, jambon et champignons.","Cuire 12 min au four à 250°C sur plaque préchauffée.","Finir avec basilic frais."],
+   astuce:"Plus le four est chaud, meilleure est la pizza — 250°C minimum !"},
+  {n:"Burger maison",t:"tous",dur:"25 min",niv:"Facile",tags:["rapide"],
+   ing:["Pain burger","Steak haché","Tomate","Salade iceberg","Cheddar","Cornichons","Sauce burger"],
+   steps:["Assaisonner le steak haché, former un palet épais.","Saisir 3 min de chaque côté pour une cuisson rosée.","Toaster le pain burger.","Assembler : sauce, salade, tomate, steak, cheddar, cornichons."],
+   astuce:"Un steak haché de qualité à 15% de MG est la clé d'un bon burger."},
+  {n:"Tajine de poulet aux citrons confits",t:"tous",dur:"65 min",niv:"Moyen",tags:["monde"],
+   ing:["Poulet","Citrons confits","Olives vertes","Oignons","Coriandre","Curcuma","Gingembre","Safran"],
+   steps:["Faire revenir les oignons avec les épices.","Ajouter les morceaux de poulet, dorer sur toutes faces.","Incorporer citrons confits coupés et olives.","Couvrir et mijoter 45 min à feu doux.","Parsemer de coriandre fraîche avant de servir."],
+   astuce:"Servir avec du pain marocain ou du couscous pour absorber la sauce."},
+  {n:"Wok de légumes au tofu",t:"tous",dur:"20 min",niv:"Facile",tags:["rapide","vege","monde"],
+   ing:["Tofu ferme","Pousses de soja","Poivrons","Brocolis","Sauce soja","Gingembre","Ail","Huile de sésame"],
+   steps:["Couper le tofu en dés, faire dorer à l'huile.","Faire sauter les légumes à feu vif dans un wok huilé.","Ajouter tofu, gingembre et ail émincé.","Verser sauce soja et huile de sésame, mélanger 2 min.","Servir immédiatement sur du riz."],
+   astuce:"Égoutter et presser le tofu dans un torchon avant cuisson pour le rendre croustillant."},
+  {n:"Hachis Parmentier",t:"tous",dur:"55 min",niv:"Facile",tags:[],
+   ing:["Bœuf haché","Purée de pommes de terre","Oignons","Tomates concassées","Gruyère","Beurre","Thym"],
+   steps:["Faire revenir les oignons, ajouter la viande hachée.","Incorporer tomates et thym, cuire 15 min.","Préparer une purée épaisse beurrée.","Alterner viande et purée dans un plat beurré.","Gratiner 20 min à 200°C avec gruyère."],
+   astuce:"La viande doit être bien assaisonnée car la purée est neutre."},
+  {n:"Ratatouille",t:"tous",dur:"55 min",niv:"Facile",tags:["vege"],
+   ing:["Courgettes","Aubergines","Poivrons","Tomates","Oignon","Herbes de Provence","Huile d'olive","Ail"],
+   steps:["Couper tous les légumes en dés réguliers.","Faire revenir séparément chaque légume à l'huile.","Réunir dans une cocotte avec l'ail et les herbes.","Mijoter 30 min à couvert à feu doux.","Rectifier l'assaisonnement."],
+   astuce:"Cuire les légumes séparément évite qu'ils rendent trop d'eau."},
+  {n:"Steak haché haricots verts",t:"tous",dur:"20 min",niv:"Facile",tags:["rapide"],
+   ing:["Steak haché","Haricots verts","Beurre","Échalote","Persil","Fleur de sel","Poivre"],
+   steps:["Cuire les haricots verts à l'eau bouillante salée 8 min.","Saisir le steak à la poêle 3 min chaque face.","Faire sauter les haricots dans le beurre avec l'échalote.","Parsemer de persil, assaisonner."],
+   astuce:"Sortir le steak du frigo 20 min avant cuisson pour une cuisson homogène."},
+  {n:"Pad Thai",t:"tous",dur:"25 min",niv:"Moyen",tags:["monde"],
+   ing:["Nouilles de riz","Crevettes","Œufs","Pousses de soja","Cacahuètes","Sauce poisson","Citron vert","Ciboulette thaï"],
+   steps:["Tremper les nouilles dans l'eau chaude 10 min.","Faire sauter les crevettes à feu vif.","Ajouter les œufs battus, brouiller rapidement.","Incorporer les nouilles égouttées et la sauce poisson.","Servir avec soja, cacahuètes et quartiers de citron vert."],
+   astuce:"Feu très vif et wok bien chaud — la clé du Pad Thai réussi."},
+  {n:"Poulet tikka masala",t:"tous",dur:"45 min",niv:"Moyen",tags:["monde"],
+   ing:["Poulet","Yaourt","Tomates concassées","Crème","Masala","Garam masala","Gingembre","Ail","Oignon"],
+   steps:["Mariner le poulet dans yaourt et épices 30 min.","Griller les morceaux de poulet marinés.","Faire revenir oignon, gingembre et ail.","Ajouter tomates et épices, mijoter 10 min.","Incorporer poulet et crème, cuire 10 min."],
+   astuce:"Servir avec du riz basmati et du naan pour un repas complet."},
+  {n:"Taboulé libanais",t:"diner",dur:"20 min",niv:"Facile",tags:["diner","rapide","vege","monde"],
+   ing:["Boulgour fin","Tomates","Persil plat","Menthe fraîche","Citron","Huile d'olive","Oignon nouveau"],
+   steps:["Réhydrater le boulgour 10 min dans l'eau bouillante, égoutter.","Ciseler finement persil et menthe.","Couper tomates et oignons en petits dés.","Mélanger tout avec citron et huile d'olive.","Laisser reposer 30 min au frais."],
+   astuce:"Dans un vrai taboulé libanais, il y a beaucoup plus de persil que de boulgour !"},
+  {n:"Gratin de courgettes",t:"diner",dur:"40 min",niv:"Facile",tags:["diner","vege"],
+   ing:["Courgettes","Œufs","Crème","Chèvre frais","Parmesan","Ail","Basilic"],
+   steps:["Couper les courgettes en rondelles, faire revenir à l'huile.","Battre œufs avec crème, ail et basilic.","Mélanger avec les courgettes et le chèvre émietté.","Verser dans un plat beurré, parsemer de parmesan.","Cuire 25 min à 180°C."],
+   astuce:"Bien égoutter les courgettes après cuisson pour éviter un gratin trop liquide."},
+  {n:"Soupe à l'oignon gratinée",t:"diner",dur:"50 min",niv:"Moyen",tags:["diner"],
+   ing:["Oignons","Bouillon de bœuf","Pain de campagne","Gruyère râpé","Beurre","Cognac","Thym"],
+   steps:["Faire caraméliser les oignons 30 min dans le beurre à feu doux.","Déglacer au cognac, ajouter le bouillon et le thym.","Mijoter 15 min, rectifier l'assaisonnement.","Verser dans des bols, déposer une tranche de pain grillé.","Couvrir de gruyère, gratiner au four."],
+   astuce:"La caramélisation des oignons ne doit pas être précipitée — c'est elle qui fait tout."},
+  {n:"Crevettes à l'ail et persil",t:"diner",dur:"15 min",niv:"Facile",tags:["diner","rapide","monde"],
+   ing:["Crevettes","Ail","Persil plat","Beurre","Citron","Piment d'Espelette","Sel"],
+   steps:["Décortiquer les crevettes en laissant la queue.","Faire fondre le beurre, ajouter ail émincé et piment.","Saisir les crevettes 2 min de chaque côté.","Presser le citron, parsemer de persil.","Servir immédiatement avec du pain croustillant."],
+   astuce:"Les crevettes cuisent très vite — 2 min max de chaque côté pour garder le moelleux."},
+  {n:"Falafels maison",t:"diner",dur:"30 min",niv:"Moyen",tags:["diner","vege","monde"],
+   ing:["Pois chiches secs","Oignon","Ail","Persil","Coriandre","Cumin","Bicarbonate","Huile de friture"],
+   steps:["Tremper les pois chiches 24h, égoutter sans les cuire.","Mixer avec oignon, ail, herbes et épices.","Former des boulettes, réfrigérer 30 min.","Frire à 180°C jusqu'à dorure, 3 min.","Servir dans du pain pita avec sauce tahini."],
+   astuce:"Utiliser des pois chiches secs — jamais en conserve pour les falafels."},
+  {n:"Bœuf bourguignon",t:"dejeuner",dur:"150 min",niv:"Difficile",tags:["dejeuner"],
+   ing:["Bœuf à braiser","Lardons","Champignons","Carottes","Vin rouge","Bouquet garni","Oignons grelots","Farine"],
+   steps:["Faire revenir les lardons, réserver.","Fariner et dorer les morceaux de bœuf sur toutes faces.","Ajouter oignons, carottes, verser le vin rouge.","Incorporer bouquet garni, mijoter 2h à feu doux.","Ajouter champignons et lardons les 20 dernières minutes."],
+   astuce:"Préparé la veille et réchauffé, le bourguignon est encore meilleur."},
+  {n:"Moules marinières",t:"dejeuner",dur:"20 min",niv:"Facile",tags:["dejeuner","rapide"],
+   ing:["Moules","Échalotes","Vin blanc sec","Beurre","Persil","Crème fraîche","Laurier"],
+   steps:["Gratter et rincer les moules, éliminer les ouvertes.","Faire fondre beurre avec échalotes émincées.","Verser le vin blanc et le laurier, porter à ébullition.","Ajouter les moules, couvrir, cuire 5 min en remuant.","Incorporer crème et persil, servir immédiatement."],
+   astuce:"Jeter toutes les moules qui ne s'ouvrent pas à la cuisson."},
+  {n:"Nems maison",t:"diner",dur:"45 min",niv:"Difficile",tags:["diner","monde"],
+   ing:["Feuilles de riz","Porc haché","Crevettes","Vermicelles de riz","Carottes","Champignons noirs","Sauce nuoc-mâm"],
+   steps:["Réhydrater vermicelles et champignons noirs.","Mélanger porc, crevettes, légumes râpés et vermicelles.","Humidifier les feuilles de riz, garnir et rouler serré.","Frire à 170°C 5 min jusqu'à dorure.","Servir avec salade, herbes fraîches et sauce nuoc-mâm."],
+   astuce:"Rouler les nems très serrés pour éviter qu'ils s'ouvrent à la friture."},
+  {n:"Crème de poireaux",t:"diner",dur:"30 min",niv:"Facile",tags:["diner","vege"],
+   ing:["Poireaux","Pommes de terre","Crème","Bouillon","Beurre","Ciboulette","Sel","Poivre"],
+   steps:["Émincer les poireaux, faire fondre dans le beurre 10 min.","Ajouter pommes de terre en dés et bouillon.","Cuire 20 min, mixer finement.","Incorporer la crème, rectifier l'assaisonnement.","Servir avec ciboulette ciselée et une noix de beurre."],
+   astuce:"Garder quelques rondelles de poireau confites pour la garniture."},
+  {n:"Poulet basquaise",t:"dejeuner",dur:"60 min",niv:"Moyen",tags:["dejeuner"],
+   ing:["Poulet","Poivrons rouges et verts","Tomates","Oignon","Ail","Chorizo","Piment d'Espelette","Thym"],
+   steps:["Faire dorer les morceaux de poulet, réserver.","Faire revenir oignon, poivrons et chorizo.","Ajouter tomates, ail, piment et thym.","Remettre le poulet, couvrir et mijoter 40 min.","Rectifier l'assaisonnement."],
+   astuce:"Le piment d'Espelette est incontournable — ne pas le substituer."},
+  {n:"Tarte tatin aux pommes",t:"dejeuner",dur:"50 min",niv:"Moyen",tags:["dejeuner","vege"],
+   ing:["Pommes Golden","Pâte feuilletée","Beurre","Sucre","Cannelle","Vanille"],
+   steps:["Faire un caramel brun dans une poêle allant au four.","Disposer les pommes épluchées et coupées dans le caramel.","Cuire 15 min à feu doux pour les confire.","Recouvrir de pâte feuilletée en rentrant les bords.","Cuire 25 min à 200°C, retourner tiède."],
+   astuce:"Retourner la tarte encore chaude — si elle refroidit, le caramel fige et colle."}
+];
 
-// ===================== UI HELPERS =====================
-function switchTab(tab) {
-  document.querySelectorAll('.tab').forEach((t,i) => {
-    t.classList.toggle('active', (i===0&&tab==='random')||(i===1&&tab==='week'));
-  });
-  document.getElementById('randomSection').classList.toggle('visible', tab==='random');
-  document.getElementById('weekSection').classList.toggle('visible', tab==='week');
+function sw(t){
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',(i===0&&t==='r')||(i===1&&t==='w')));
+  document.getElementById('sr').classList.toggle('on',t==='r');
+  document.getElementById('sw2').classList.toggle('on',t==='w');
 }
-
-function setFilter(btn, filter) {
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  currentFilter = filter;
+function sf(btn,f){
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); flt=f;
 }
-
-function setLoading(btnId, iconId, loading, iconText='✦') {
-  const btn = document.getElementById(btnId);
-  const icon = document.getElementById(iconId);
-  btn.disabled = loading;
-  icon.innerHTML = loading ? '<span class="icon-spin">◌</span>' : iconText;
+function getPool(){
+  const kw=document.getElementById('cp').value.trim().toLowerCase();
+  let pool=DB;
+  if(flt==='dejeuner') pool=pool.filter(m=>m.tags.includes('dejeuner')||m.t==='dejeuner');
+  else if(flt==='diner') pool=pool.filter(m=>m.tags.includes('diner')||m.t==='diner');
+  else if(flt==='rapide') pool=pool.filter(m=>m.tags.includes('rapide'));
+  else if(flt==='vege') pool=pool.filter(m=>m.tags.includes('vege'));
+  else if(flt==='monde') pool=pool.filter(m=>m.tags.includes('monde'));
+  if(kw) pool=pool.filter(m=>m.n.toLowerCase().includes(kw)||m.ing.some(i=>i.toLowerCase().includes(kw)));
+  return pool.length?pool:DB;
 }
-
-function showLoader(containerId, msg='L\'IA recherche une idée de repas…') {
-  document.getElementById(containerId).innerHTML = `
-    <div class="loader-wrap">
-      <div class="loader-ring"></div>
-      <div>${msg}</div>
-    </div>`;
+function genR(){
+  const btn=document.getElementById('br');
+  const icon=document.getElementById('bri');
+  icon.classList.add('spin');
+  setTimeout(()=>{
+    const pool=getPool();
+    const m=pool[Math.floor(Math.random()*pool.length)];
+    const ings=m.ing.map(i=>`<span class="tag">${i}</span>`).join('');
+    const steps=m.steps.map((s,i)=>`<li class="step"><span class="sn">${i+1}</span><span>${s}</span></li>`).join('');
+    document.getElementById('rr').innerHTML=`
+      <div class="meal-card">
+        <div class="mc-top">
+          <div class="mc-lbl">Recette du moment</div>
+          <div class="mc-name">${m.n}</div>
+          <div class="mc-meta">
+            <span class="mc-chip">⏱ ${m.dur}</span>
+            <span class="mc-chip">👨‍🍳 ${m.niv}</span>
+          </div>
+        </div>
+        <div class="mc-body">
+          <div class="slbl">Ingrédients</div>
+          <div class="tags">${ings}</div>
+          <div class="slbl">Préparation</div>
+          <ul class="steps">${steps}</ul>
+          <div class="slbl">Astuce</div>
+          <div class="astuce">💡 ${m.astuce}</div>
+        </div>
+      </div>`;
+    icon.classList.remove('spin');
+  },350);
 }
-
-// ===================== API CALL =====================
-async function callClaude(userPrompt) {
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: MODEL,
-      max_tokens: 1000,
-      tools: [{ type: "web_search_20250305", name: "web_search" }],
-      messages: [{ role: "user", content: userPrompt }]
-    })
-  });
-  if (!res.ok) throw new Error(`Erreur API: ${res.status}`);
-  const data = await res.json();
-  // Extract text from content blocks
-  return data.content.filter(b => b.type === 'text').map(b => b.text).join('\n');
-}
-
-// ===================== REPAS ALÉATOIRE =====================
-async function generateRandom() {
-  setLoading('btnRandom','randomIcon',true,'✦');
-  showLoader('randomResult','L\'IA cherche une idée de repas sur le web…');
-
-  const custom = document.getElementById('customPrompt').value.trim();
-  const filterPart = currentFilter !== 'tous' ? `de type "${currentFilter}"` : '';
-  const customPart = custom ? `avec la contrainte suivante : "${custom}"` : '';
-
-  const prompt = `Génère UN repas ${filterPart} ${customPart} en cherchant une vraie recette sur le web.
-Réponds UNIQUEMENT en JSON valide, sans balises markdown, avec ce format exact :
-{
-  "nom": "Nom du plat",
-  "type": "Déjeuner ou Dîner",
-  "temps": "XX min",
-  "difficulte": "Facile / Moyen / Difficile",
-  "ingredients": ["ingrédient 1", "ingrédient 2", "..."],
-  "etapes": ["Étape 1...", "Étape 2...", "..."],
-  "astuce": "Un conseil du chef en 1 phrase"
-}
-Renvoie uniquement le JSON, pas d'explication.`;
-
-  try {
-    const raw = await callClaude(prompt);
-    const clean = raw.replace(/```json|```/g, '').trim();
-    const meal = JSON.parse(clean);
-    renderMealCard(meal);
-  } catch(e) {
-    document.getElementById('randomResult').innerHTML = `
-      <div class="error-box">❌ Erreur lors de la génération : ${e.message}. Réessayez.</div>`;
-  } finally {
-    setLoading('btnRandom','randomIcon',false,'✦');
+const DAYS_W=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
+function genW(){
+  const lpool=DB.filter(m=>!m.tags.includes('diner'));
+  const dpool=DB.filter(m=>!m.tags.includes('dejeuner'));
+  let used=new Set();
+  function pick(pool){
+    let c=pool.filter(m=>!used.has(m.n));
+    if(!c.length){used.clear();c=pool;}
+    const m=c[Math.floor(Math.random()*c.length)];
+    used.add(m.n); return m;
   }
-}
-
-function renderMealCard(meal) {
-  const ings = (meal.ingredients||[]).map(i => `<span class="ing-tag">${i}</span>`).join('');
-  const steps = (meal.etapes||[]).map((s,i) => `
-    <li><span class="step-num">${i+1}</span><span>${s}</span></li>`).join('');
-
-  document.getElementById('randomResult').innerHTML = `
-    <div class="meal-card">
-      <div class="meal-card-top">
-        <div class="meal-label">✦ Généré par l'IA</div>
-        <div class="meal-title">${meal.nom||'Repas'}</div>
-        <div class="meal-meta-row">
-          <div class="meta-chip">⏱ ${meal.temps||'—'}</div>
-          <div class="meta-chip">👨‍🍳 ${meal.difficulte||'—'}</div>
-          <div class="meta-chip">🍽 ${meal.type||'—'}</div>
+  const html=DAYS_W.map(day=>{
+    const l=pick(lpool); const d=pick(dpool);
+    return `<div class="day-card">
+      <div class="dh"><span class="dn">${day}</span><span style="font-size:.72rem;color:var(--muted)">2 repas</span></div>
+      <div class="ds">
+        <div class="dsl">
+          <div class="dll">🌞 Déjeuner</div>
+          <div class="dln">${l.n}</div>
+          <div class="dli">⏱ ${l.dur}</div>
+          <div class="dli">${l.ing.slice(0,3).join(', ')}</div>
+        </div>
+        <div class="dsl">
+          <div class="dll">🌙 Dîner</div>
+          <div class="dln">${d.n}</div>
+          <div class="dli">⏱ ${d.dur}</div>
+          <div class="dli">${d.ing.slice(0,3).join(', ')}</div>
         </div>
       </div>
-      <div class="meal-card-body">
-        <div class="section-label">Ingrédients</div>
-        <div class="ingredients-wrap">${ings}</div>
-
-        <div class="section-label">Préparation</div>
-        <ul class="recipe-steps">${steps}</ul>
-
-        ${meal.astuce ? `
-        <div class="section-label">Astuce du chef</div>
-        <div style="font-size:0.85rem;color:#c8ccdb;background:rgba(245,166,35,0.06);border-left:3px solid var(--accent);padding:10px 12px;border-radius:0 8px 8px 0;">💡 ${meal.astuce}</div>
-        ` : ''}
-      </div>
-    </div>
-  `;
-}
-
-// ===================== PLANNING SEMAINE =====================
-async function generateWeek() {
-  setLoading('btnWeek','weekIcon',true,'🔄');
-  const grid = document.getElementById('weekGrid');
-  const progress = document.getElementById('weekProgress');
-  const bar = document.getElementById('progressBar');
-  const label = document.getElementById('progressLabel');
-
-  grid.innerHTML = '';
-  progress.classList.add('visible');
-  bar.style.width = '0%';
-
-  const results = [];
-
-  try {
-    for (let i = 0; i < DAYS.length; i++) {
-      const day = DAYS[i];
-      label.textContent = `Génération : ${day}… (${i+1}/7)`;
-      bar.style.width = `${((i)/7)*100}%`;
-
-      const prompt = `Pour un planning de repas, génère le déjeuner ET le dîner pour ${day}.
-Cherche des vraies idées de recettes variées, équilibrées et différentes des jours précédents.
-Réponds UNIQUEMENT en JSON valide sans balises markdown :
-{
-  "dejeuner": {
-    "nom": "Nom du plat",
-    "temps": "XX min",
-    "ingredients": ["ing1", "ing2", "ing3"]
-  },
-  "diner": {
-    "nom": "Nom du plat",
-    "temps": "XX min",
-    "ingredients": ["ing1", "ing2", "ing3"]
-  }
-}
-Uniquement le JSON, rien d'autre.`;
-
-      try {
-        const raw = await callClaude(prompt);
-        const clean = raw.replace(/```json|```/g, '').trim();
-        const dayData = JSON.parse(clean);
-        results.push({ day, ...dayData });
-        renderDayCard({ day, ...dayData }, i);
-      } catch(e) {
-        results.push({ day, error: true });
-        renderDayCardError(day, i);
-      }
-    }
-
-    bar.style.width = '100%';
-    label.textContent = '✅ Planning généré !';
-    setTimeout(() => progress.classList.remove('visible'), 2000);
-
-  } finally {
-    setLoading('btnWeek','weekIcon',false,'🔄');
-  }
-}
-
-function renderDayCard(data, idx) {
-  const grid = document.getElementById('weekGrid');
-  const dej = data.dejeuner || {};
-  const din = data.diner || {};
-
-  const card = document.createElement('div');
-  card.className = 'day-card';
-  card.style.animationDelay = `${idx * 0.04}s`;
-  card.innerHTML = `
-    <div class="day-header">
-      <span class="day-name">${data.day}</span>
-      <span class="day-status">2 repas générés</span>
-    </div>
-    <div class="day-slots">
-      <div class="day-slot">
-        <div class="slot-label">🌞 Déjeuner</div>
-        <div class="slot-name">${dej.nom||'—'}</div>
-        <div class="slot-time">⏱ ${dej.temps||'—'}</div>
-        <div class="slot-detail">${(dej.ingredients||[]).slice(0,3).join(', ')}${dej.ingredients&&dej.ingredients.length>3?'…':''}</div>
-      </div>
-      <div class="day-slot">
-        <div class="slot-label">🌙 Dîner</div>
-        <div class="slot-name">${din.nom||'—'}</div>
-        <div class="slot-time">⏱ ${din.temps||'—'}</div>
-        <div class="slot-detail">${(din.ingredients||[]).slice(0,3).join(', ')}${din.ingredients&&din.ingredients.length>3?'…':''}</div>
-      </div>
     </div>`;
-  grid.appendChild(card);
-}
-
-function renderDayCardError(day, idx) {
-  const grid = document.getElementById('weekGrid');
-  const card = document.createElement('div');
-  card.className = 'day-card';
-  card.style.animationDelay = `${idx * 0.04}s`;
-  card.innerHTML = `
-    <div class="day-header">
-      <span class="day-name">${day}</span>
-      <span class="day-status" style="color:#f08080">Erreur</span>
-    </div>
-    <div style="padding:12px 16px;font-size:0.82rem;color:var(--muted);">Impossible de générer ce jour. Réessayez.</div>`;
-  grid.appendChild(card);
+  }).join('');
+  document.getElementById('wg').innerHTML=html;
 }
 </script>
 </body>
