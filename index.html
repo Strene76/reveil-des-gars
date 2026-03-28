@@ -5,10 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Générateur de Repas</title>
 <style>
-  :root {
-    --bg:#f7f4ef; --card:#fff; --accent:#c8522a; --accent2:#e8a87c;
-    --text:#1a1208; --muted:#8a7d6b; --border:#e5ddd0; --tag:#f5ede0;
-  }
+  :root{--bg:#f7f4ef;--card:#fff;--accent:#c8522a;--text:#1a1208;--muted:#8a7d6b;--border:#e5ddd0;--tag:#f5ede0}
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:40px}
   header{background:var(--accent);padding:28px 20px 22px;text-align:center}
@@ -25,13 +22,12 @@
   .cinput{width:100%;padding:10px 14px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;font-size:.88rem;color:var(--text);outline:none;margin-bottom:10px}
   .cinput:focus{border-color:var(--accent)}
   .btn-gen{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer;margin-bottom:18px;transition:all .2s}
-  .btn-gen:hover{background:#b54522}
   .btn-gen:active{transform:scale(.98)}
   .meal-card{background:var(--card);border-radius:16px;box-shadow:0 3px 16px rgba(0,0,0,.08);overflow:hidden;margin-bottom:16px;animation:up .35s ease}
   @keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
   .mc-top{background:linear-gradient(135deg,var(--accent),#d4693e);padding:20px 18px 16px;color:#fff}
   .mc-lbl{font-size:.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;opacity:.8;margin-bottom:6px}
-  .mc-name{font-size:1.6rem;font-weight:700;line-height:1.2}
+  .mc-name{font-size:1.5rem;font-weight:700;line-height:1.2}
   .mc-meta{display:flex;gap:14px;margin-top:10px}
   .mc-chip{font-size:.78rem;opacity:.85}
   .mc-body{padding:16px 18px}
@@ -42,7 +38,7 @@
   .steps{list-style:none;display:flex;flex-direction:column;gap:8px}
   .step{display:flex;gap:9px;font-size:.84rem;color:#555;line-height:1.55}
   .sn{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:rgba(200,82,42,.12);border:1px solid rgba(200,82,42,.25);color:var(--accent);font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:2px}
-  .astuce{font-size:.82rem;color:#555;border-left:3px solid var(--accent2);padding:8px 11px;border-radius:0 8px 8px 0;background:#fffaf5}
+  .astuce{font-size:.82rem;color:#555;border-left:3px solid #e8a87c;padding:8px 11px;border-radius:0 8px 8px 0;background:#fffaf5}
   .week-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
   .week-bar h2{font-size:1.2rem;font-weight:700}
   .btn-sm{padding:9px 16px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:.82rem;font-weight:700;cursor:pointer}
@@ -60,12 +56,13 @@
   .empty .ico{font-size:2rem;margin-bottom:10px}
   .spin{display:inline-block;animation:sp .6s linear infinite}
   @keyframes sp{to{transform:rotate(360deg)}}
+  .count-badge{display:inline-block;background:rgba(255,255,255,.2);border-radius:10px;padding:2px 8px;font-size:.72rem;margin-left:6px}
 </style>
 </head>
 <body>
 <header>
   <h1>🍽️ Générateur de Repas</h1>
-  <p>40 recettes intégrées · Fonctionne hors ligne</p>
+  <p>100 recettes intégrées · Fonctionne hors ligne</p>
 </header>
 <div class="tabs">
   <button class="tab active" onclick="sw('r')">🎲 Repas aléatoire</button>
@@ -80,8 +77,10 @@
       <button class="fb" onclick="sf(this,'rapide')">⚡ Rapide</button>
       <button class="fb" onclick="sf(this,'vege')">🥗 Végétarien</button>
       <button class="fb" onclick="sf(this,'monde')">🌍 Monde</button>
+      <button class="fb" onclick="sf(this,'poisson')">🐟 Poisson</button>
+      <button class="fb" onclick="sf(this,'viande')">🥩 Viande</button>
     </div>
-    <input class="cinput" id="cp" type="text" placeholder="Ex : saumon, pasta, wok…">
+    <input class="cinput" id="cp" type="text" placeholder="Ex : saumon, poulet, pasta…">
     <button class="btn-gen" id="br" onclick="genR()"><span id="bri">✦</span> Générer un repas</button>
     <div id="rr"><div class="empty"><div class="ico">🍽️</div>Appuyez sur Générer<br>pour découvrir votre prochain repas !</div></div>
   </div>
@@ -94,166 +93,118 @@
   </div>
 </div>
 <script>
-const DAYS=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
 let flt="tous";
-
 const DB=[
-  {n:"Poulet rôti aux herbes",t:"dejeuner",dur:"45 min",niv:"Facile",tags:["dejeuner"],
-   ing:["Poulet entier","Herbes de Provence","Ail","Citron","Pommes de terre","Huile d'olive"],
-   steps:["Préchauffer le four à 200°C.","Frotter le poulet avec les herbes, l'ail écrasé et l'huile d'olive.","Disposer les pommes de terre en rondelles autour, arroser de jus de citron.","Enfourner 45 min en arrosant toutes les 15 min."],
-   astuce:"Couvrir d'alu les 20 premières minutes pour garder le moelleux."},
-  {n:"Quiche Lorraine",t:"dejeuner",dur:"55 min",niv:"Moyen",tags:["dejeuner"],
-   ing:["Pâte brisée","Lardons fumés","Œufs","Crème fraîche","Gruyère râpé","Noix de muscade"],
-   steps:["Foncer un moule avec la pâte brisée, piquer le fond.","Faire revenir les lardons sans matière grasse.","Battre les œufs avec la crème, sel, poivre et muscade.","Répartir lardons et gruyère sur la pâte, verser l'appareil.","Cuire 35 min à 180°C jusqu'à dorure."],
-   astuce:"Laisser tiédir 10 min avant de démouler pour une coupe nette."},
-  {n:"Risotto aux champignons",t:"dejeuner",dur:"35 min",niv:"Moyen",tags:["dejeuner","vege"],
-   ing:["Riz arborio","Champignons de Paris","Parmesan","Oignon","Bouillon de légumes","Beurre","Vin blanc"],
-   steps:["Faire suer l'oignon émincé dans le beurre.","Ajouter le riz, nacrer 2 min puis déglacer au vin blanc.","Incorporer le bouillon chaud louche par louche en remuant.","Ajouter les champignons sautés à mi-cuisson.","Mantecarer avec beurre et parmesan hors du feu."],
-   astuce:"Le secret : bouillon chaud et patience — ne jamais arrêter de remuer !"},
-  {n:"Salade Niçoise",t:"dejeuner",dur:"15 min",niv:"Facile",tags:["dejeuner","rapide"],
-   ing:["Thon en boîte","Œufs durs","Tomates cerises","Olives noires","Haricots verts","Anchois","Vinaigrette"],
-   steps:["Cuire les haricots verts al dente, refroidir.","Disposer tous les ingrédients en dôme dans un saladier.","Arroser de vinaigrette huile d'olive / vinaigre balsamique."],
-   astuce:"Ne jamais mélanger une niçoise — c'est tout l'art de la présentation."},
-  {n:"Gratin dauphinois",t:"dejeuner",dur:"70 min",niv:"Facile",tags:["dejeuner","vege"],
-   ing:["Pommes de terre","Crème liquide","Lait","Ail","Gruyère","Noix de muscade","Beurre"],
-   steps:["Éplucher et trancher finement les pommes de terre.","Frotter le plat à gratin avec l'ail puis beurrer.","Disposer les rondelles en couches, saler, poivrer, muscader.","Mélanger crème et lait, verser sur les pommes de terre.","Gratiner au four 60 min à 180°C."],
-   astuce:"Couvrir de papier alu les 40 premières minutes, retirer pour gratiner."},
-  {n:"Lasagnes bolognaise",t:"dejeuner",dur:"75 min",niv:"Moyen",tags:["dejeuner"],
-   ing:["Pâtes à lasagnes","Bœuf haché","Tomates concassées","Béchamel","Parmesan","Oignon","Carotte"],
-   steps:["Préparer la bolognaise : faire revenir oignon, carotte, viande. Ajouter tomates, mijoter 30 min.","Préparer une béchamel épaisse.","Alterner couches lasagnes / bolognaise / béchamel dans un plat.","Terminer par béchamel + parmesan râpé.","Cuire 35 min à 180°C."],
-   astuce:"Préparer la bolognaise la veille : elle est bien meilleure réchauffée."},
-  {n:"Omelette aux fines herbes",t:"dejeuner",dur:"10 min",niv:"Facile",tags:["dejeuner","rapide","vege"],
-   ing:["Œufs","Ciboulette","Estragon","Persil plat","Beurre","Sel","Poivre"],
-   steps:["Battre les œufs avec les herbes ciselées, sel et poivre.","Faire fondre le beurre dans une poêle à feu vif.","Verser les œufs, agiter la poêle en repliant les bords.","Plier l'omelette en deux dès qu'elle est baveuse à cœur."],
-   astuce:"Une omelette se mange baveuse — trop cuite elle devient caoutchouteuse."},
-  {n:"Croque-monsieur gratiné",t:"dejeuner",dur:"15 min",niv:"Facile",tags:["dejeuner","rapide"],
-   ing:["Pain de mie","Jambon blanc","Gruyère râpé","Béchamel","Beurre","Moutarde"],
-   steps:["Tartiner les tranches de pain de béchamel et moutarde.","Garnir de jambon et gruyère, refermer.","Beurrer l'extérieur du sandwich.","Faire dorer à la poêle ou passer 10 min au four à 200°C."],
-   astuce:"Un peu de muscade dans la béchamel fait toute la différence."},
-  {n:"Sole meunière",t:"dejeuner",dur:"20 min",niv:"Facile",tags:["dejeuner","rapide"],
-   ing:["Filets de sole","Farine","Beurre","Citron","Persil plat","Sel","Poivre"],
-   steps:["Fariner légèrement les filets de sole, secouer l'excédent.","Faire fondre le beurre à feu moyen jusqu'à noisette.","Saisir les filets 2 min de chaque côté.","Presser le citron, parsemer de persil ciselé."],
-   astuce:"Le beurre noisette donne toute la saveur — surveiller la couleur de près."},
-  {n:"Tarte aux légumes provençale",t:"dejeuner",dur:"50 min",niv:"Facile",tags:["dejeuner","vege"],
-   ing:["Pâte brisée","Courgettes","Poivrons","Tomates","Fromage de chèvre","Œufs","Herbes de Provence"],
-   steps:["Foncer un moule avec la pâte brisée.","Faire revenir les légumes en dés à l'huile d'olive.","Battre les œufs, ajouter les légumes et les herbes.","Verser sur la pâte, disposer des rondelles de chèvre.","Cuire 35 min à 180°C."],
-   astuce:"Précuire la pâte 10 min à blanc pour éviter le fond détrempé."},
-  {n:"Velouté de potiron",t:"diner",dur:"30 min",niv:"Facile",tags:["diner","vege"],
-   ing:["Potiron","Crème fraîche","Oignon","Bouillon de légumes","Noix de muscade","Graines de courge"],
-   steps:["Faire revenir l'oignon émincé dans le beurre.","Ajouter le potiron en dés, mouiller au bouillon, cuire 20 min.","Mixer finement, ajouter la crème, ajuster l'assaisonnement.","Servir avec graines de courge torréfiées."],
-   astuce:"Une pointe de gingembre frais râpé apporte une touche chaleureuse."},
-  {n:"Dos de cabillaud vapeur",t:"diner",dur:"20 min",niv:"Facile",tags:["diner","rapide"],
-   ing:["Dos de cabillaud","Légumes vapeur","Citron","Aneth","Beurre citronné","Sel","Poivre"],
-   steps:["Assaisonner le cabillaud sel, poivre, aneth.","Cuire à la vapeur 12 min selon épaisseur.","Préparer un beurre citronné fondu avec zeste de citron.","Servir avec les légumes vapeur, napper de beurre."],
-   astuce:"Le cabillaud est cuit quand la chair se détache en feuillets."},
-  {n:"Soupe de lentilles au cumin",t:"diner",dur:"35 min",niv:"Facile",tags:["diner","vege"],
-   ing:["Lentilles corail","Carottes","Céleri","Cumin","Tomates","Oignon","Coriandre fraîche"],
-   steps:["Faire revenir oignon, carottes et céleri en dés.","Ajouter les lentilles rincées, les tomates et le cumin.","Couvrir d'eau, cuire 25 min à feu moyen.","Mixer partiellement pour une texture crémeuse.","Garnir de coriandre fraîche."],
-   astuce:"Les lentilles corail ne nécessitent pas de trempage — gain de temps !"},
-  {n:"Filet de saumon teriyaki",t:"diner",dur:"25 min",niv:"Facile",tags:["diner","monde"],
-   ing:["Pavé de saumon","Sauce soja","Miel","Gingembre frais","Sésame","Riz basmati","Pak choï"],
-   steps:["Mélanger sauce soja, miel et gingembre râpé pour la marinade.","Faire mariner le saumon 15 min.","Saisir le saumon 3 min côté peau dans une poêle chaude.","Retourner, verser la marinade, caraméliser 2 min.","Servir sur riz, parsemer de sésame."],
-   astuce:"Ne pas trop cuire — le saumon doit rester rosé à cœur."},
-  {n:"Oeufs cocotte à la crème",t:"diner",dur:"15 min",niv:"Facile",tags:["diner","rapide","vege"],
-   ing:["Œufs","Crème fraîche","Jambon","Emmental","Ciboulette","Sel","Poivre"],
-   steps:["Préchauffer le four à 180°C.","Beurrer des ramequins, déposer jambon en dés.","Verser une cuillère de crème, casser l'œuf par-dessus.","Ajouter crème, fromage, ciboulette.","Cuire au bain-marie 12 min."],
-   astuce:"Surveiller la cuisson — le blanc doit être pris, le jaune encore coulant."},
-  {n:"Minestrone de légumes",t:"diner",dur:"40 min",niv:"Facile",tags:["diner","vege"],
-   ing:["Pâtes","Tomates","Haricots blancs","Carottes","Courgettes","Basilic","Parmesan"],
-   steps:["Faire revenir les légumes en dés à l'huile d'olive.","Ajouter tomates concassées et bouillon, mijoter 20 min.","Incorporer les haricots égouttés et les pâtes.","Cuire encore 10 min, rectifier l'assaisonnement.","Servir avec parmesan et basilic frais."],
-   astuce:"Ajouter une croûte de parmesan pendant la cuisson pour plus de saveur."},
-  {n:"Tartines avocat crevettes",t:"diner",dur:"10 min",niv:"Facile",tags:["diner","rapide"],
-   ing:["Pain complet","Avocat","Crevettes roses","Citron vert","Coriandre","Piment doux","Fleur de sel"],
-   steps:["Écraser l'avocat avec citron vert, sel et piment.","Toaster les tranches de pain.","Tartiner généreusement d'avocat.","Disposer les crevettes, parsemer de coriandre et fleur de sel."],
-   astuce:"Citronner l'avocat immédiatement pour éviter l'oxydation."},
-  {n:"Poisson à la provençale",t:"diner",dur:"35 min",niv:"Facile",tags:["diner"],
-   ing:["Filets de merlu","Tomates","Olives noires","Câpres","Ail","Herbes de Provence","Huile d'olive"],
-   steps:["Faire revenir l'ail dans l'huile d'olive.","Ajouter les tomates concassées, olives et câpres, mijoter 15 min.","Déposer les filets de poisson dans la sauce.","Couvrir et cuire 10 min à feu doux.","Parsemer d'herbes de Provence."],
-   astuce:"Le merlu peut être remplacé par tout poisson blanc à chair ferme."},
-  {n:"Pâtes carbonara",t:"tous",dur:"20 min",niv:"Moyen",tags:["rapide"],
-   ing:["Spaghettis","Guanciale ou lardons","Œufs","Pecorino","Poivre noir","Sel"],
-   steps:["Cuire les pâtes al dente dans l'eau très salée.","Faire revenir le guanciale à sec jusqu'à croustillant.","Mélanger œufs et pecorino râpé.","Hors du feu, mélanger pâtes, guanciale et crème d'œufs.","Ajouter de l'eau de cuisson pour lier, poivrer généreusement."],
-   astuce:"La vraie carbonara n'a pas de crème — c'est l'eau de cuisson qui lie."},
-  {n:"Pizza maison",t:"tous",dur:"45 min",niv:"Moyen",tags:[],
-   ing:["Pâte à pizza","Coulis de tomate","Mozzarella","Jambon","Champignons","Basilic","Origan"],
-   steps:["Étaler la pâte finement sur une surface farinée.","Étaler le coulis, laisser 2 cm de bord.","Disposer mozzarella, jambon et champignons.","Cuire 12 min au four à 250°C sur plaque préchauffée.","Finir avec basilic frais."],
-   astuce:"Plus le four est chaud, meilleure est la pizza — 250°C minimum !"},
-  {n:"Burger maison",t:"tous",dur:"25 min",niv:"Facile",tags:["rapide"],
-   ing:["Pain burger","Steak haché","Tomate","Salade iceberg","Cheddar","Cornichons","Sauce burger"],
-   steps:["Assaisonner le steak haché, former un palet épais.","Saisir 3 min de chaque côté pour une cuisson rosée.","Toaster le pain burger.","Assembler : sauce, salade, tomate, steak, cheddar, cornichons."],
-   astuce:"Un steak haché de qualité à 15% de MG est la clé d'un bon burger."},
-  {n:"Tajine de poulet aux citrons confits",t:"tous",dur:"65 min",niv:"Moyen",tags:["monde"],
-   ing:["Poulet","Citrons confits","Olives vertes","Oignons","Coriandre","Curcuma","Gingembre","Safran"],
-   steps:["Faire revenir les oignons avec les épices.","Ajouter les morceaux de poulet, dorer sur toutes faces.","Incorporer citrons confits coupés et olives.","Couvrir et mijoter 45 min à feu doux.","Parsemer de coriandre fraîche avant de servir."],
-   astuce:"Servir avec du pain marocain ou du couscous pour absorber la sauce."},
-  {n:"Wok de légumes au tofu",t:"tous",dur:"20 min",niv:"Facile",tags:["rapide","vege","monde"],
-   ing:["Tofu ferme","Pousses de soja","Poivrons","Brocolis","Sauce soja","Gingembre","Ail","Huile de sésame"],
-   steps:["Couper le tofu en dés, faire dorer à l'huile.","Faire sauter les légumes à feu vif dans un wok huilé.","Ajouter tofu, gingembre et ail émincé.","Verser sauce soja et huile de sésame, mélanger 2 min.","Servir immédiatement sur du riz."],
-   astuce:"Égoutter et presser le tofu dans un torchon avant cuisson pour le rendre croustillant."},
-  {n:"Hachis Parmentier",t:"tous",dur:"55 min",niv:"Facile",tags:[],
-   ing:["Bœuf haché","Purée de pommes de terre","Oignons","Tomates concassées","Gruyère","Beurre","Thym"],
-   steps:["Faire revenir les oignons, ajouter la viande hachée.","Incorporer tomates et thym, cuire 15 min.","Préparer une purée épaisse beurrée.","Alterner viande et purée dans un plat beurré.","Gratiner 20 min à 200°C avec gruyère."],
-   astuce:"La viande doit être bien assaisonnée car la purée est neutre."},
-  {n:"Ratatouille",t:"tous",dur:"55 min",niv:"Facile",tags:["vege"],
-   ing:["Courgettes","Aubergines","Poivrons","Tomates","Oignon","Herbes de Provence","Huile d'olive","Ail"],
-   steps:["Couper tous les légumes en dés réguliers.","Faire revenir séparément chaque légume à l'huile.","Réunir dans une cocotte avec l'ail et les herbes.","Mijoter 30 min à couvert à feu doux.","Rectifier l'assaisonnement."],
-   astuce:"Cuire les légumes séparément évite qu'ils rendent trop d'eau."},
-  {n:"Steak haché haricots verts",t:"tous",dur:"20 min",niv:"Facile",tags:["rapide"],
-   ing:["Steak haché","Haricots verts","Beurre","Échalote","Persil","Fleur de sel","Poivre"],
-   steps:["Cuire les haricots verts à l'eau bouillante salée 8 min.","Saisir le steak à la poêle 3 min chaque face.","Faire sauter les haricots dans le beurre avec l'échalote.","Parsemer de persil, assaisonner."],
-   astuce:"Sortir le steak du frigo 20 min avant cuisson pour une cuisson homogène."},
-  {n:"Pad Thai",t:"tous",dur:"25 min",niv:"Moyen",tags:["monde"],
-   ing:["Nouilles de riz","Crevettes","Œufs","Pousses de soja","Cacahuètes","Sauce poisson","Citron vert","Ciboulette thaï"],
-   steps:["Tremper les nouilles dans l'eau chaude 10 min.","Faire sauter les crevettes à feu vif.","Ajouter les œufs battus, brouiller rapidement.","Incorporer les nouilles égouttées et la sauce poisson.","Servir avec soja, cacahuètes et quartiers de citron vert."],
-   astuce:"Feu très vif et wok bien chaud — la clé du Pad Thai réussi."},
-  {n:"Poulet tikka masala",t:"tous",dur:"45 min",niv:"Moyen",tags:["monde"],
-   ing:["Poulet","Yaourt","Tomates concassées","Crème","Masala","Garam masala","Gingembre","Ail","Oignon"],
-   steps:["Mariner le poulet dans yaourt et épices 30 min.","Griller les morceaux de poulet marinés.","Faire revenir oignon, gingembre et ail.","Ajouter tomates et épices, mijoter 10 min.","Incorporer poulet et crème, cuire 10 min."],
-   astuce:"Servir avec du riz basmati et du naan pour un repas complet."},
-  {n:"Taboulé libanais",t:"diner",dur:"20 min",niv:"Facile",tags:["diner","rapide","vege","monde"],
-   ing:["Boulgour fin","Tomates","Persil plat","Menthe fraîche","Citron","Huile d'olive","Oignon nouveau"],
-   steps:["Réhydrater le boulgour 10 min dans l'eau bouillante, égoutter.","Ciseler finement persil et menthe.","Couper tomates et oignons en petits dés.","Mélanger tout avec citron et huile d'olive.","Laisser reposer 30 min au frais."],
-   astuce:"Dans un vrai taboulé libanais, il y a beaucoup plus de persil que de boulgour !"},
-  {n:"Gratin de courgettes",t:"diner",dur:"40 min",niv:"Facile",tags:["diner","vege"],
-   ing:["Courgettes","Œufs","Crème","Chèvre frais","Parmesan","Ail","Basilic"],
-   steps:["Couper les courgettes en rondelles, faire revenir à l'huile.","Battre œufs avec crème, ail et basilic.","Mélanger avec les courgettes et le chèvre émietté.","Verser dans un plat beurré, parsemer de parmesan.","Cuire 25 min à 180°C."],
-   astuce:"Bien égoutter les courgettes après cuisson pour éviter un gratin trop liquide."},
-  {n:"Soupe à l'oignon gratinée",t:"diner",dur:"50 min",niv:"Moyen",tags:["diner"],
-   ing:["Oignons","Bouillon de bœuf","Pain de campagne","Gruyère râpé","Beurre","Cognac","Thym"],
-   steps:["Faire caraméliser les oignons 30 min dans le beurre à feu doux.","Déglacer au cognac, ajouter le bouillon et le thym.","Mijoter 15 min, rectifier l'assaisonnement.","Verser dans des bols, déposer une tranche de pain grillé.","Couvrir de gruyère, gratiner au four."],
-   astuce:"La caramélisation des oignons ne doit pas être précipitée — c'est elle qui fait tout."},
-  {n:"Crevettes à l'ail et persil",t:"diner",dur:"15 min",niv:"Facile",tags:["diner","rapide","monde"],
-   ing:["Crevettes","Ail","Persil plat","Beurre","Citron","Piment d'Espelette","Sel"],
-   steps:["Décortiquer les crevettes en laissant la queue.","Faire fondre le beurre, ajouter ail émincé et piment.","Saisir les crevettes 2 min de chaque côté.","Presser le citron, parsemer de persil.","Servir immédiatement avec du pain croustillant."],
-   astuce:"Les crevettes cuisent très vite — 2 min max de chaque côté pour garder le moelleux."},
-  {n:"Falafels maison",t:"diner",dur:"30 min",niv:"Moyen",tags:["diner","vege","monde"],
-   ing:["Pois chiches secs","Oignon","Ail","Persil","Coriandre","Cumin","Bicarbonate","Huile de friture"],
-   steps:["Tremper les pois chiches 24h, égoutter sans les cuire.","Mixer avec oignon, ail, herbes et épices.","Former des boulettes, réfrigérer 30 min.","Frire à 180°C jusqu'à dorure, 3 min.","Servir dans du pain pita avec sauce tahini."],
-   astuce:"Utiliser des pois chiches secs — jamais en conserve pour les falafels."},
-  {n:"Bœuf bourguignon",t:"dejeuner",dur:"150 min",niv:"Difficile",tags:["dejeuner"],
-   ing:["Bœuf à braiser","Lardons","Champignons","Carottes","Vin rouge","Bouquet garni","Oignons grelots","Farine"],
-   steps:["Faire revenir les lardons, réserver.","Fariner et dorer les morceaux de bœuf sur toutes faces.","Ajouter oignons, carottes, verser le vin rouge.","Incorporer bouquet garni, mijoter 2h à feu doux.","Ajouter champignons et lardons les 20 dernières minutes."],
-   astuce:"Préparé la veille et réchauffé, le bourguignon est encore meilleur."},
-  {n:"Moules marinières",t:"dejeuner",dur:"20 min",niv:"Facile",tags:["dejeuner","rapide"],
-   ing:["Moules","Échalotes","Vin blanc sec","Beurre","Persil","Crème fraîche","Laurier"],
-   steps:["Gratter et rincer les moules, éliminer les ouvertes.","Faire fondre beurre avec échalotes émincées.","Verser le vin blanc et le laurier, porter à ébullition.","Ajouter les moules, couvrir, cuire 5 min en remuant.","Incorporer crème et persil, servir immédiatement."],
-   astuce:"Jeter toutes les moules qui ne s'ouvrent pas à la cuisson."},
-  {n:"Nems maison",t:"diner",dur:"45 min",niv:"Difficile",tags:["diner","monde"],
-   ing:["Feuilles de riz","Porc haché","Crevettes","Vermicelles de riz","Carottes","Champignons noirs","Sauce nuoc-mâm"],
-   steps:["Réhydrater vermicelles et champignons noirs.","Mélanger porc, crevettes, légumes râpés et vermicelles.","Humidifier les feuilles de riz, garnir et rouler serré.","Frire à 170°C 5 min jusqu'à dorure.","Servir avec salade, herbes fraîches et sauce nuoc-mâm."],
-   astuce:"Rouler les nems très serrés pour éviter qu'ils s'ouvrent à la friture."},
-  {n:"Crème de poireaux",t:"diner",dur:"30 min",niv:"Facile",tags:["diner","vege"],
-   ing:["Poireaux","Pommes de terre","Crème","Bouillon","Beurre","Ciboulette","Sel","Poivre"],
-   steps:["Émincer les poireaux, faire fondre dans le beurre 10 min.","Ajouter pommes de terre en dés et bouillon.","Cuire 20 min, mixer finement.","Incorporer la crème, rectifier l'assaisonnement.","Servir avec ciboulette ciselée et une noix de beurre."],
-   astuce:"Garder quelques rondelles de poireau confites pour la garniture."},
-  {n:"Poulet basquaise",t:"dejeuner",dur:"60 min",niv:"Moyen",tags:["dejeuner"],
-   ing:["Poulet","Poivrons rouges et verts","Tomates","Oignon","Ail","Chorizo","Piment d'Espelette","Thym"],
-   steps:["Faire dorer les morceaux de poulet, réserver.","Faire revenir oignon, poivrons et chorizo.","Ajouter tomates, ail, piment et thym.","Remettre le poulet, couvrir et mijoter 40 min.","Rectifier l'assaisonnement."],
-   astuce:"Le piment d'Espelette est incontournable — ne pas le substituer."},
-  {n:"Tarte tatin aux pommes",t:"dejeuner",dur:"50 min",niv:"Moyen",tags:["dejeuner","vege"],
-   ing:["Pommes Golden","Pâte feuilletée","Beurre","Sucre","Cannelle","Vanille"],
-   steps:["Faire un caramel brun dans une poêle allant au four.","Disposer les pommes épluchées et coupées dans le caramel.","Cuire 15 min à feu doux pour les confire.","Recouvrir de pâte feuilletée en rentrant les bords.","Cuire 25 min à 200°C, retourner tiède."],
-   astuce:"Retourner la tarte encore chaude — si elle refroidit, le caramel fige et colle."}
+// ── DÉJEUNERS FRANÇAIS ──
+{n:"Poulet rôti aux herbes",dur:"45 min",niv:"Facile",tags:["dejeuner","viande"],ing:["Poulet entier","Herbes de Provence","Ail","Citron","Pommes de terre","Huile d'olive"],steps:["Préchauffer le four à 200°C.","Frotter le poulet avec les herbes, l'ail écrasé et l'huile d'olive.","Disposer les pommes de terre en rondelles autour, arroser de jus de citron.","Enfourner 45 min en arrosant toutes les 15 min."],astuce:"Couvrir d'alu les 20 premières minutes pour garder le moelleux."},
+{n:"Quiche Lorraine",dur:"55 min",niv:"Moyen",tags:["dejeuner"],ing:["Pâte brisée","Lardons fumés","Œufs","Crème fraîche","Gruyère râpé","Noix de muscade"],steps:["Foncer un moule avec la pâte brisée, piquer le fond.","Faire revenir les lardons sans matière grasse.","Battre les œufs avec la crème, sel, poivre et muscade.","Répartir lardons et gruyère sur la pâte, verser l'appareil.","Cuire 35 min à 180°C jusqu'à dorure."],astuce:"Laisser tiédir 10 min avant de démouler pour une coupe nette."},
+{n:"Gratin dauphinois",dur:"70 min",niv:"Facile",tags:["dejeuner","vege"],ing:["Pommes de terre","Crème liquide","Lait","Ail","Gruyère","Noix de muscade","Beurre"],steps:["Éplucher et trancher finement les pommes de terre.","Frotter le plat à gratin avec l'ail puis beurrer.","Disposer les rondelles en couches, saler, poivrer, muscader.","Mélanger crème et lait, verser sur les pommes de terre.","Gratiner au four 60 min à 180°C."],astuce:"Couvrir de papier alu les 40 premières minutes, retirer pour gratiner."},
+{n:"Bœuf bourguignon",dur:"150 min",niv:"Difficile",tags:["dejeuner","viande"],ing:["Bœuf à braiser","Lardons","Champignons","Carottes","Vin rouge","Bouquet garni","Oignons grelots","Farine"],steps:["Faire revenir les lardons, réserver.","Fariner et dorer les morceaux de bœuf sur toutes faces.","Ajouter oignons, carottes, verser le vin rouge.","Incorporer bouquet garni, mijoter 2h à feu doux.","Ajouter champignons et lardons les 20 dernières minutes."],astuce:"Préparé la veille et réchauffé, le bourguignon est encore meilleur."},
+{n:"Sole meunière",dur:"20 min",niv:"Facile",tags:["dejeuner","rapide","poisson"],ing:["Filets de sole","Farine","Beurre","Citron","Persil plat"],steps:["Fariner légèrement les filets de sole, secouer l'excédent.","Faire fondre le beurre à feu moyen jusqu'à noisette.","Saisir les filets 2 min de chaque côté.","Presser le citron, parsemer de persil ciselé."],astuce:"Le beurre noisette donne toute la saveur — surveiller la couleur de près."},
+{n:"Moules marinières",dur:"20 min",niv:"Facile",tags:["dejeuner","rapide","poisson"],ing:["Moules","Échalotes","Vin blanc sec","Beurre","Persil","Crème fraîche","Laurier"],steps:["Gratter et rincer les moules, éliminer les ouvertes.","Faire fondre beurre avec échalotes émincées.","Verser le vin blanc et le laurier, porter à ébullition.","Ajouter les moules, couvrir, cuire 5 min en remuant.","Incorporer crème et persil, servir immédiatement."],astuce:"Jeter toutes les moules qui ne s'ouvrent pas à la cuisson."},
+{n:"Poulet basquaise",dur:"60 min",niv:"Moyen",tags:["dejeuner","viande"],ing:["Poulet","Poivrons rouges et verts","Tomates","Oignon","Ail","Chorizo","Piment d'Espelette","Thym"],steps:["Faire dorer les morceaux de poulet, réserver.","Faire revenir oignon, poivrons et chorizo.","Ajouter tomates, ail, piment et thym.","Remettre le poulet, couvrir et mijoter 40 min."],astuce:"Le piment d'Espelette est incontournable — ne pas le substituer."},
+{n:"Tarte aux légumes provençale",dur:"50 min",niv:"Facile",tags:["dejeuner","vege"],ing:["Pâte brisée","Courgettes","Poivrons","Tomates","Fromage de chèvre","Œufs","Herbes de Provence"],steps:["Foncer un moule avec la pâte brisée.","Faire revenir les légumes en dés à l'huile d'olive.","Battre les œufs, ajouter les légumes et les herbes.","Verser sur la pâte, disposer des rondelles de chèvre.","Cuire 35 min à 180°C."],astuce:"Précuire la pâte 10 min à blanc pour éviter le fond détrempé."},
+{n:"Salade Niçoise",dur:"15 min",niv:"Facile",tags:["dejeuner","rapide","poisson"],ing:["Thon en boîte","Œufs durs","Tomates cerises","Olives noires","Haricots verts","Anchois","Vinaigrette"],steps:["Cuire les haricots verts al dente, refroidir.","Disposer tous les ingrédients en dôme dans un saladier.","Arroser de vinaigrette huile d'olive / vinaigre balsamique."],astuce:"Ne jamais mélanger une niçoise — c'est tout l'art de la présentation."},
+{n:"Lasagnes bolognaise",dur:"75 min",niv:"Moyen",tags:["dejeuner","viande"],ing:["Pâtes à lasagnes","Bœuf haché","Tomates concassées","Béchamel","Parmesan","Oignon","Carotte"],steps:["Préparer la bolognaise : faire revenir oignon, carotte, viande. Ajouter tomates, mijoter 30 min.","Préparer une béchamel épaisse.","Alterner couches lasagnes / bolognaise / béchamel dans un plat.","Terminer par béchamel + parmesan râpé.","Cuire 35 min à 180°C."],astuce:"Préparer la bolognaise la veille : elle est bien meilleure réchauffée."},
+{n:"Croque-monsieur gratiné",dur:"15 min",niv:"Facile",tags:["dejeuner","rapide"],ing:["Pain de mie","Jambon blanc","Gruyère râpé","Béchamel","Beurre","Moutarde"],steps:["Tartiner les tranches de pain de béchamel et moutarde.","Garnir de jambon et gruyère, refermer.","Beurrer l'extérieur du sandwich.","Faire dorer à la poêle ou passer 10 min au four à 200°C."],astuce:"Un peu de muscade dans la béchamel fait toute la différence."},
+{n:"Risotto aux champignons",dur:"35 min",niv:"Moyen",tags:["dejeuner","vege"],ing:["Riz arborio","Champignons de Paris","Parmesan","Oignon","Bouillon de légumes","Beurre","Vin blanc"],steps:["Faire suer l'oignon émincé dans le beurre.","Ajouter le riz, nacrer 2 min puis déglacer au vin blanc.","Incorporer le bouillon chaud louche par louche en remuant.","Ajouter les champignons sautés à mi-cuisson.","Mantecarer avec beurre et parmesan hors du feu."],astuce:"Le secret : bouillon chaud et patience — ne jamais arrêter de remuer !"},
+{n:"Hachis Parmentier",dur:"55 min",niv:"Facile",tags:["dejeuner","viande"],ing:["Bœuf haché","Purée de pommes de terre","Oignons","Tomates concassées","Gruyère","Beurre","Thym"],steps:["Faire revenir les oignons, ajouter la viande hachée.","Incorporer tomates et thym, cuire 15 min.","Préparer une purée épaisse beurrée.","Alterner viande et purée dans un plat beurré.","Gratiner 20 min à 200°C avec gruyère."],astuce:"La viande doit être bien assaisonnée car la purée est neutre."},
+{n:"Blanquette de veau",dur:"90 min",niv:"Moyen",tags:["dejeuner","viande"],ing:["Veau","Carottes","Poireaux","Bouquet garni","Beurre","Farine","Crème","Jaunes d'œufs"],steps:["Cuire le veau dans l'eau froide avec légumes et bouquet garni 1h.","Préparer un roux blanc avec beurre et farine.","Mouiller avec le bouillon de cuisson filtré, fouetter.","Lier hors du feu avec crème et jaunes d'œufs.","Ajouter le veau, servir avec du riz."],astuce:"Ne jamais faire bouillir après avoir ajouté les jaunes — la sauce tournerait."},
+{n:"Confit de canard",dur:"40 min",niv:"Facile",tags:["dejeuner","viande"],ing:["Cuisses de canard confites","Pommes sarladaises","Ail","Persil","Fleur de sel"],steps:["Sortir les cuisses de leur graisse, gratter l'excédent.","Faire chauffer à sec une poêle, dorer les cuisses côté peau 10 min.","Préparer les pommes sarladaises : trancher les pommes de terre, faire sauter dans la graisse de canard avec ail.","Servir les cuisses sur le lit de pommes, parsemer de persil."],astuce:"Le secret des pommes sarladaises : les cuire dans la vraie graisse de canard."},
+{n:"Tartiflette",dur:"50 min",niv:"Facile",tags:["dejeuner"],ing:["Pommes de terre","Reblochon","Lardons","Oignons","Crème fraîche","Vin blanc"],steps:["Cuire les pommes de terre en robe des champs, éplucher et trancher.","Faire revenir lardons et oignons.","Disposer pommes de terre, lardons et oignons dans un plat beurré.","Verser la crème, déposer le reblochon coupé en deux côté croûte vers le haut.","Cuire 25 min à 200°C."],astuce:"Utiliser un reblochon bien fait à cœur pour un résultat fondant."},
+{n:"Pot-au-feu",dur:"180 min",niv:"Facile",tags:["dejeuner","viande"],ing:["Bœuf (plat de côtes, paleron)","Carottes","Navets","Poireaux","Céleri","Os à moelle","Bouquet garni"],steps:["Plonger la viande dans l'eau froide, porter à ébullition, écumer.","Ajouter tous les légumes et le bouquet garni.","Mijoter à petits frémissements 2h30.","Ajouter les os à moelle les 30 dernières minutes.","Servir bouillon, viande et légumes séparément."],astuce:"Le bouillon doit frémir doucement — jamais bouillir fortement."},
+{n:"Gratin de chou-fleur",dur:"45 min",niv:"Facile",tags:["dejeuner","vege"],ing:["Chou-fleur","Béchamel","Gruyère râpé","Beurre","Noix de muscade"],steps:["Cuire le chou-fleur en fleurettes à la vapeur 10 min.","Préparer une béchamel nappante avec muscade.","Disposer le chou-fleur dans un plat beurré, napper de béchamel.","Parsemer de gruyère, gratiner 20 min à 200°C."],astuce:"Bien égoutter le chou-fleur pour éviter de détremper la béchamel."},
+{n:"Omelette aux fines herbes",dur:"10 min",niv:"Facile",tags:["dejeuner","rapide","vege"],ing:["Œufs","Ciboulette","Estragon","Persil plat","Beurre"],steps:["Battre les œufs avec les herbes ciselées, sel et poivre.","Faire fondre le beurre dans une poêle à feu vif.","Verser les œufs, agiter la poêle en repliant les bords.","Plier l'omelette en deux dès qu'elle est baveuse à cœur."],astuce:"Une omelette se mange baveuse — trop cuite elle devient caoutchouteuse."},
+{n:"Tarte tatin aux pommes",dur:"50 min",niv:"Moyen",tags:["dejeuner","vege"],ing:["Pommes Golden","Pâte feuilletée","Beurre","Sucre","Cannelle","Vanille"],steps:["Faire un caramel brun dans une poêle allant au four.","Disposer les pommes épluchées et coupées dans le caramel.","Cuire 15 min à feu doux pour les confire.","Recouvrir de pâte feuilletée en rentrant les bords.","Cuire 25 min à 200°C, retourner tiède."],astuce:"Retourner la tarte encore chaude — si elle refroidit, le caramel fige et colle."},
+// ── DÎNERS LÉGERS ──
+{n:"Velouté de potiron",dur:"30 min",niv:"Facile",tags:["diner","vege"],ing:["Potiron","Crème fraîche","Oignon","Bouillon de légumes","Noix de muscade","Graines de courge"],steps:["Faire revenir l'oignon émincé dans le beurre.","Ajouter le potiron en dés, mouiller au bouillon, cuire 20 min.","Mixer finement, ajouter la crème, ajuster l'assaisonnement.","Servir avec graines de courge torréfiées."],astuce:"Une pointe de gingembre frais râpé apporte une touche chaleureuse."},
+{n:"Dos de cabillaud vapeur",dur:"20 min",niv:"Facile",tags:["diner","rapide","poisson"],ing:["Dos de cabillaud","Légumes vapeur","Citron","Aneth","Beurre citronné"],steps:["Assaisonner le cabillaud sel, poivre, aneth.","Cuire à la vapeur 12 min selon épaisseur.","Préparer un beurre citronné fondu avec zeste de citron.","Servir avec les légumes vapeur, napper de beurre."],astuce:"Le cabillaud est cuit quand la chair se détache en feuillets."},
+{n:"Soupe de lentilles au cumin",dur:"35 min",niv:"Facile",tags:["diner","vege"],ing:["Lentilles corail","Carottes","Céleri","Cumin","Tomates","Oignon","Coriandre fraîche"],steps:["Faire revenir oignon, carottes et céleri en dés.","Ajouter les lentilles rincées, les tomates et le cumin.","Couvrir d'eau, cuire 25 min à feu moyen.","Mixer partiellement pour une texture crémeuse.","Garnir de coriandre fraîche."],astuce:"Les lentilles corail ne nécessitent pas de trempage — gain de temps !"},
+{n:"Oeufs cocotte à la crème",dur:"15 min",niv:"Facile",tags:["diner","rapide","vege"],ing:["Œufs","Crème fraîche","Jambon","Emmental","Ciboulette"],steps:["Préchauffer le four à 180°C.","Beurrer des ramequins, déposer jambon en dés.","Verser une cuillère de crème, casser l'œuf par-dessus.","Ajouter crème, fromage, ciboulette.","Cuire au bain-marie 12 min."],astuce:"Surveiller la cuisson — le blanc doit être pris, le jaune encore coulant."},
+{n:"Minestrone de légumes",dur:"40 min",niv:"Facile",tags:["diner","vege"],ing:["Pâtes","Tomates","Haricots blancs","Carottes","Courgettes","Basilic","Parmesan"],steps:["Faire revenir les légumes en dés à l'huile d'olive.","Ajouter tomates concassées et bouillon, mijoter 20 min.","Incorporer les haricots égouttés et les pâtes.","Cuire encore 10 min, rectifier l'assaisonnement.","Servir avec parmesan et basilic frais."],astuce:"Ajouter une croûte de parmesan pendant la cuisson pour plus de saveur."},
+{n:"Tartines avocat crevettes",dur:"10 min",niv:"Facile",tags:["diner","rapide","poisson"],ing:["Pain complet","Avocat","Crevettes roses","Citron vert","Coriandre","Piment doux"],steps:["Écraser l'avocat avec citron vert, sel et piment.","Toaster les tranches de pain.","Tartiner généreusement d'avocat.","Disposer les crevettes, parsemer de coriandre et fleur de sel."],astuce:"Citronner l'avocat immédiatement pour éviter l'oxydation."},
+{n:"Poisson à la provençale",dur:"35 min",niv:"Facile",tags:["diner","poisson"],ing:["Filets de merlu","Tomates","Olives noires","Câpres","Ail","Herbes de Provence"],steps:["Faire revenir l'ail dans l'huile d'olive.","Ajouter les tomates concassées, olives et câpres, mijoter 15 min.","Déposer les filets de poisson dans la sauce.","Couvrir et cuire 10 min à feu doux.","Parsemer d'herbes de Provence."],astuce:"Le merlu peut être remplacé par tout poisson blanc à chair ferme."},
+{n:"Soupe à l'oignon gratinée",dur:"50 min",niv:"Moyen",tags:["diner"],ing:["Oignons","Bouillon de bœuf","Pain de campagne","Gruyère râpé","Beurre","Cognac","Thym"],steps:["Faire caraméliser les oignons 30 min dans le beurre à feu doux.","Déglacer au cognac, ajouter le bouillon et le thym.","Mijoter 15 min, rectifier l'assaisonnement.","Verser dans des bols, déposer une tranche de pain grillé.","Couvrir de gruyère, gratiner au four."],astuce:"La caramélisation des oignons ne doit pas être précipitée — c'est elle qui fait tout."},
+{n:"Crevettes à l'ail et persil",dur:"15 min",niv:"Facile",tags:["diner","rapide","poisson"],ing:["Crevettes","Ail","Persil plat","Beurre","Citron","Piment d'Espelette"],steps:["Décortiquer les crevettes en laissant la queue.","Faire fondre le beurre, ajouter ail émincé et piment.","Saisir les crevettes 2 min de chaque côté.","Presser le citron, parsemer de persil.","Servir immédiatement avec du pain croustillant."],astuce:"Les crevettes cuisent très vite — 2 min max de chaque côté pour garder le moelleux."},
+{n:"Crème de poireaux",dur:"30 min",niv:"Facile",tags:["diner","vege"],ing:["Poireaux","Pommes de terre","Crème","Bouillon","Beurre","Ciboulette"],steps:["Émincer les poireaux, faire fondre dans le beurre 10 min.","Ajouter pommes de terre en dés et bouillon.","Cuire 20 min, mixer finement.","Incorporer la crème, rectifier l'assaisonnement.","Servir avec ciboulette ciselée et une noix de beurre."],astuce:"Garder quelques rondelles de poireau confites pour la garniture."},
+{n:"Gratin de courgettes au chèvre",dur:"40 min",niv:"Facile",tags:["diner","vege"],ing:["Courgettes","Œufs","Crème","Chèvre frais","Parmesan","Ail","Basilic"],steps:["Couper les courgettes en rondelles, faire revenir à l'huile.","Battre œufs avec crème, ail et basilic.","Mélanger avec les courgettes et le chèvre émietté.","Verser dans un plat beurré, parsemer de parmesan.","Cuire 25 min à 180°C."],astuce:"Bien égoutter les courgettes après cuisson pour éviter un gratin trop liquide."},
+{n:"Taboulé libanais",dur:"20 min",niv:"Facile",tags:["diner","rapide","vege","monde"],ing:["Boulgour fin","Tomates","Persil plat","Menthe fraîche","Citron","Huile d'olive","Oignon nouveau"],steps:["Réhydrater le boulgour 10 min dans l'eau bouillante, égoutter.","Ciseler finement persil et menthe.","Couper tomates et oignons en petits dés.","Mélanger tout avec citron et huile d'olive.","Laisser reposer 30 min au frais."],astuce:"Dans un vrai taboulé libanais, il y a beaucoup plus de persil que de boulgour !"},
+{n:"Falafels maison",dur:"30 min",niv:"Moyen",tags:["diner","vege","monde"],ing:["Pois chiches secs","Oignon","Ail","Persil","Coriandre","Cumin","Bicarbonate"],steps:["Tremper les pois chiches 24h, égoutter sans les cuire.","Mixer avec oignon, ail, herbes et épices.","Former des boulettes, réfrigérer 30 min.","Frire à 180°C jusqu'à dorure, 3 min.","Servir dans du pain pita avec sauce tahini."],astuce:"Utiliser des pois chiches secs — jamais en conserve pour les falafels."},
+// ── CUISINE DU MONDE ──
+{n:"Filet de saumon teriyaki",dur:"25 min",niv:"Facile",tags:["diner","rapide","poisson","monde"],ing:["Pavé de saumon","Sauce soja","Miel","Gingembre frais","Sésame","Riz basmati","Pak choï"],steps:["Mélanger sauce soja, miel et gingembre râpé pour la marinade.","Faire mariner le saumon 15 min.","Saisir le saumon 3 min côté peau dans une poêle chaude.","Retourner, verser la marinade, caraméliser 2 min.","Servir sur riz, parsemer de sésame."],astuce:"Ne pas trop cuire — le saumon doit rester rosé à cœur."},
+{n:"Tajine de poulet aux citrons confits",dur:"65 min",niv:"Moyen",tags:["dejeuner","viande","monde"],ing:["Poulet","Citrons confits","Olives vertes","Oignons","Coriandre","Curcuma","Gingembre","Safran"],steps:["Faire revenir les oignons avec les épices.","Ajouter les morceaux de poulet, dorer sur toutes faces.","Incorporer citrons confits coupés et olives.","Couvrir et mijoter 45 min à feu doux.","Parsemer de coriandre fraîche avant de servir."],astuce:"Servir avec du pain marocain ou du couscous pour absorber la sauce."},
+{n:"Wok de légumes au tofu",dur:"20 min",niv:"Facile",tags:["diner","rapide","vege","monde"],ing:["Tofu ferme","Pousses de soja","Poivrons","Brocolis","Sauce soja","Gingembre","Ail","Huile de sésame"],steps:["Couper le tofu en dés, faire dorer à l'huile.","Faire sauter les légumes à feu vif dans un wok huilé.","Ajouter tofu, gingembre et ail émincé.","Verser sauce soja et huile de sésame, mélanger 2 min.","Servir immédiatement sur du riz."],astuce:"Égoutter et presser le tofu dans un torchon avant cuisson pour le rendre croustillant."},
+{n:"Pad Thai",dur:"25 min",niv:"Moyen",tags:["diner","monde"],ing:["Nouilles de riz","Crevettes","Œufs","Pousses de soja","Cacahuètes","Sauce poisson","Citron vert"],steps:["Tremper les nouilles dans l'eau chaude 10 min.","Faire sauter les crevettes à feu vif.","Ajouter les œufs battus, brouiller rapidement.","Incorporer les nouilles égouttées et la sauce poisson.","Servir avec soja, cacahuètes et quartiers de citron vert."],astuce:"Feu très vif et wok bien chaud — la clé du Pad Thai réussi."},
+{n:"Poulet tikka masala",dur:"45 min",niv:"Moyen",tags:["dejeuner","viande","monde"],ing:["Poulet","Yaourt","Tomates concassées","Crème","Garam masala","Gingembre","Ail","Oignon"],steps:["Mariner le poulet dans yaourt et épices 30 min.","Griller les morceaux de poulet marinés.","Faire revenir oignon, gingembre et ail.","Ajouter tomates et épices, mijoter 10 min.","Incorporer poulet et crème, cuire 10 min."],astuce:"Servir avec du riz basmati et du naan pour un repas complet."},
+{n:"Nems maison",dur:"45 min",niv:"Difficile",tags:["diner","monde"],ing:["Feuilles de riz","Porc haché","Crevettes","Vermicelles de riz","Carottes","Champignons noirs","Sauce nuoc-mâm"],steps:["Réhydrater vermicelles et champignons noirs.","Mélanger porc, crevettes, légumes râpés et vermicelles.","Humidifier les feuilles de riz, garnir et rouler serré.","Frire à 170°C 5 min jusqu'à dorure.","Servir avec salade, herbes fraîches et sauce nuoc-mâm."],astuce:"Rouler les nems très serrés pour éviter qu'ils s'ouvrent à la friture."},
+{n:"Ramen maison",dur:"40 min",niv:"Moyen",tags:["diner","monde"],ing:["Bouillon de poulet","Nouilles ramen","Œuf mollet","Chashu (porc braisé)","Miso","Nori","Ciboule","Menma"],steps:["Préparer le bouillon miso : diluer la pâte dans le bouillon chaud.","Cuire les nouilles selon le paquet, égoutter.","Préparer les œufs mollets : 6 min 30 dans l'eau bouillante, refroidir dans l'eau glacée.","Assembler : nouilles, bouillon chaud, garnitures par-dessus."],astuce:"La qualité du bouillon fait tout — le laisser mijoter longtemps."},
+{n:"Curry de pois chiches",dur:"30 min",niv:"Facile",tags:["diner","vege","monde"],ing:["Pois chiches","Tomates concassées","Lait de coco","Curry","Oignon","Ail","Gingembre","Épinards"],steps:["Faire revenir oignon, ail et gingembre.","Ajouter le curry en poudre, cuire 1 min.","Incorporer tomates, lait de coco et pois chiches égouttés.","Mijoter 15 min, ajouter les épinards 2 min avant la fin.","Servir avec du riz basmati."],astuce:"Le lait de coco adoucit le curry — ajuster selon le goût."},
+{n:"Poulet yassa",dur:"50 min",niv:"Moyen",tags:["dejeuner","viande","monde"],ing:["Poulet","Oignons","Citron","Moutarde","Ail","Piment","Bouillon"],steps:["Mariner le poulet dans citron, moutarde, ail et piment 1h.","Faire dorer le poulet, réserver.","Faire confire les oignons dans la marinade.","Ajouter le bouillon, remettre le poulet, mijoter 30 min.","Servir avec du riz blanc."],astuce:"Plus les oignons sont confits, meilleur est le yassa."},
+{n:"Gyoza maison",dur:"40 min",niv:"Moyen",tags:["diner","monde"],ing:["Pâte à gyoza","Porc haché","Chou chinois","Ciboule","Gingembre","Sauce soja","Huile de sésame"],steps:["Mélanger porc, chou finement émincé, ciboule, gingembre et assaisonnements.","Garnir chaque pâte d'une cuillère de farce, plier et sceller.","Faire dorer à la poêle huilée 2 min côté plat.","Ajouter un verre d'eau, couvrir, cuire 5 min à la vapeur.","Servir avec sauce soja et vinaigre de riz."],astuce:"Le pliage des gyoza demande de la pratique — imparfaits, ils restent délicieux !"},
+{n:"Paella valenciana",dur:"60 min",niv:"Difficile",tags:["dejeuner","monde","poisson"],ing:["Riz à paella","Poulet","Crevettes","Moules","Tomates","Safran","Paprika fumé","Bouillon de fruits de mer"],steps:["Faire revenir poulet et fruits de mer, réserver.","Faire revenir tomates et épices dans la même poêle.","Ajouter le riz, nacrer 2 min.","Verser le bouillon chaud au safran, cuire sans remuer 18 min.","Disposer les fruits de mer, former le socarrat (croûte)."],astuce:"Ne jamais remuer la paella après avoir ajouté le bouillon."},
+// ── PLATS RAPIDES ──
+{n:"Pâtes carbonara",dur:"20 min",niv:"Moyen",tags:["rapide"],ing:["Spaghettis","Guanciale ou lardons","Œufs","Pecorino","Poivre noir"],steps:["Cuire les pâtes al dente dans l'eau très salée.","Faire revenir le guanciale à sec jusqu'à croustillant.","Mélanger œufs et pecorino râpé.","Hors du feu, mélanger pâtes, guanciale et crème d'œufs.","Ajouter de l'eau de cuisson pour lier, poivrer généreusement."],astuce:"La vraie carbonara n'a pas de crème — c'est l'eau de cuisson qui lie."},
+{n:"Pizza maison",dur:"45 min",niv:"Moyen",tags:[],ing:["Pâte à pizza","Coulis de tomate","Mozzarella","Jambon","Champignons","Basilic","Origan"],steps:["Étaler la pâte finement sur une surface farinée.","Étaler le coulis, laisser 2 cm de bord.","Disposer mozzarella, jambon et champignons.","Cuire 12 min au four à 250°C sur plaque préchauffée.","Finir avec basilic frais."],astuce:"Plus le four est chaud, meilleure est la pizza — 250°C minimum !"},
+{n:"Burger maison",dur:"25 min",niv:"Facile",tags:["rapide","viande"],ing:["Pain burger","Steak haché","Tomate","Salade iceberg","Cheddar","Cornichons","Sauce burger"],steps:["Assaisonner le steak haché, former un palet épais.","Saisir 3 min de chaque côté pour une cuisson rosée.","Toaster le pain burger.","Assembler : sauce, salade, tomate, steak, cheddar, cornichons."],astuce:"Un steak haché de qualité à 15% de MG est la clé d'un bon burger."},
+{n:"Steak haché haricots verts",dur:"20 min",niv:"Facile",tags:["rapide","viande"],ing:["Steak haché","Haricots verts","Beurre","Échalote","Persil","Fleur de sel"],steps:["Cuire les haricots verts à l'eau bouillante salée 8 min.","Saisir le steak à la poêle 3 min chaque face.","Faire sauter les haricots dans le beurre avec l'échalote.","Parsemer de persil, assaisonner."],astuce:"Sortir le steak du frigo 20 min avant cuisson pour une cuisson homogène."},
+{n:"Salade César",dur:"15 min",niv:"Facile",tags:["rapide","viande"],ing:["Laitue romaine","Poulet grillé","Parmesan","Croûtons","Sauce César","Anchois"],steps:["Griller les filets de poulet assaisonnés, trancher.","Préparer la sauce César : mayo, anchois, ail, parmesan, citron.","Déchirer la laitue, mélanger avec la sauce.","Disposer poulet, croûtons et parmesan râpé."],astuce:"La sauce maison est infiniment meilleure que celle en bouteille."},
+{n:"Wrap poulet avocat",dur:"15 min",niv:"Facile",tags:["rapide","viande"],ing:["Tortilla de blé","Poulet grillé","Avocat","Salade","Tomate","Crème fraîche","Citron"],steps:["Écraser l'avocat avec citron, sel et poivre.","Faire griller les tranches de poulet.","Tartiner la tortilla de crème fraîche puis d'avocat.","Garnir de poulet, salade et tomate.","Rouler serré, couper en biais."],astuce:"Réchauffer légèrement la tortilla pour qu'elle soit plus souple à rouler."},
+{n:"Pâtes à la crème de saumon",dur:"20 min",niv:"Facile",tags:["rapide","poisson"],ing:["Penne","Saumon fumé","Crème fraîche","Citron","Aneth","Câpres","Échalote"],steps:["Cuire les pâtes al dente.","Faire revenir l'échalote, ajouter la crème et les câpres.","Incorporer le saumon coupé en lamelles, chauffer doucement.","Mélanger avec les pâtes, zester le citron.","Parsemer d'aneth frais."],astuce:"Ne pas faire bouillir la sauce après avoir ajouté le saumon — il durcirait."},
+{n:"Riz cantonais",dur:"20 min",niv:"Facile",tags:["rapide","monde"],ing:["Riz cuit de la veille","Œufs","Petits pois","Jambon","Sauce soja","Ciboule","Huile de sésame"],steps:["Battre les œufs et brouiller à feu vif dans le wok.","Ajouter le riz froid, faire sauter 3 min.","Incorporer petits pois et jambon en dés.","Assaisonner à la sauce soja et huile de sésame.","Parsemer de ciboule ciselée."],astuce:"Toujours utiliser du riz cuit la veille — le riz frais colle trop."},
+{n:"Tacos maison",dur:"25 min",niv:"Facile",tags:["rapide","viande","monde"],ing:["Tortillas de maïs","Bœuf haché épicé","Guacamole","Salsa","Fromage râpé","Coriandre","Citron vert"],steps:["Faire revenir la viande avec épices tex-mex, cumin, paprika.","Préparer le guacamole : avocat, citron vert, piment, coriandre.","Réchauffer les tortillas à sec dans une poêle.","Garnir de viande, guacamole, salsa et fromage.","Finir avec coriandre et jus de citron vert."],astuce:"Chauffer les tortillas une par une pour garder leur souplesse."},
+{n:"Quenelles sauce tomate",dur:"20 min",niv:"Facile",tags:["rapide"],ing:["Quenelles de brochet","Coulis de tomate","Crème","Échalote","Beurre","Herbes"],steps:["Faire revenir l'échalote dans le beurre.","Ajouter le coulis de tomate, laisser réduire 5 min.","Incorporer la crème, assaisonner.","Pocher les quenelles dans la sauce 10 min à feu doux.","Parsemer d'herbes fraîches."],astuce:"Ne jamais faire bouillir les quenelles — elles se désintégreraient."},
+// ── VÉGÉTARIEN ──
+{n:"Ratatouille",dur:"55 min",niv:"Facile",tags:["vege"],ing:["Courgettes","Aubergines","Poivrons","Tomates","Oignon","Herbes de Provence","Huile d'olive","Ail"],steps:["Couper tous les légumes en dés réguliers.","Faire revenir séparément chaque légume à l'huile.","Réunir dans une cocotte avec l'ail et les herbes.","Mijoter 30 min à couvert à feu doux.","Rectifier l'assaisonnement."],astuce:"Cuire les légumes séparément évite qu'ils rendent trop d'eau."},
+{n:"Tian de légumes",dur:"60 min",niv:"Facile",tags:["vege","dejeuner"],ing:["Courgettes","Tomates","Aubergines","Oignons","Thym","Huile d'olive","Ail","Parmesan"],steps:["Trancher tous les légumes finement à la mandoline.","Faire revenir les oignons et l'ail.","Étaler les oignons dans un plat, disposer les rondelles de légumes en rosace.","Arroser d'huile d'olive, parsemer de thym et parmesan.","Cuire 45 min à 180°C."],astuce:"Le tian est encore meilleur tiède ou froid le lendemain."},
+{n:"Soufflé au fromage",dur:"40 min",niv:"Difficile",tags:["vege","diner"],ing:["Gruyère râpé","Œufs","Beurre","Farine","Lait","Noix de muscade"],steps:["Préparer une béchamel épaisse, incorporer le fromage hors du feu.","Séparer les blancs des jaunes. Incorporer les jaunes à la béchamel.","Monter les blancs en neige ferme.","Incorporer délicatement les blancs à la préparation.","Cuire 25 min à 190°C sans ouvrir le four."],astuce:"Ne jamais ouvrir le four pendant la cuisson — le soufflé tomberait immédiatement."},
+{n:"Gnocchis sauce gorgonzola",dur:"25 min",niv:"Facile",tags:["vege","rapide"],ing:["Gnocchis","Gorgonzola","Crème fraîche","Noix","Beurre","Sauge"],steps:["Faire fondre le gorgonzola dans la crème à feu doux.","Cuire les gnocchis dans l'eau bouillante salée jusqu'à ce qu'ils remontent.","Faire dorer les gnocchis au beurre avec la sauge.","Napper de sauce au gorgonzola.","Parsemer de noix concassées."],astuce:"Les gnocchis sont prêts dès qu'ils remontent à la surface — pas besoin d'attendre plus."},
+{n:"Poivrons farcis aux légumes",dur:"55 min",niv:"Moyen",tags:["vege","dejeuner"],ing:["Poivrons","Riz","Courgettes","Tomates","Oignon","Herbes","Parmesan"],steps:["Précuire le riz.","Mélanger riz, légumes en dés sautés, herbes et parmesan.","Couper le dessus des poivrons, vider les graines.","Remplir de la farce, replacer le chapeau.","Cuire 40 min à 180°C."],astuce:"Blanchir les poivrons 5 min avant de les farcir pour une cuisson homogène."},
+{n:"Quiche aux épinards et feta",dur:"50 min",niv:"Facile",tags:["vege","dejeuner"],ing:["Pâte brisée","Épinards","Feta","Œufs","Crème","Ail","Noix de muscade"],steps:["Faire revenir les épinards avec l'ail, bien presser pour éliminer l'eau.","Mélanger œufs, crème, épinards et feta émiettée.","Foncer un moule, verser l'appareil.","Cuire 35 min à 180°C."],astuce:"Les épinards doivent être très bien essorés pour éviter une quiche liquide."},
+{n:"Aubergines à la parmigiana",dur:"60 min",niv:"Moyen",tags:["vege","dejeuner"],ing:["Aubergines","Sauce tomate","Mozzarella","Parmesan","Basilic","Huile d'olive"],steps:["Trancher les aubergines, saler 30 min, rincer et sécher.","Faire frire les tranches ou les rôtir au four.","Alterner couches aubergines / sauce tomate / mozzarella / parmesan.","Terminer par parmesan et basilic.","Cuire 30 min à 180°C."],astuce:"Frire les aubergines donne plus de goût que les cuire au four."},
+{n:"Risotto aux asperges",dur:"35 min",niv:"Moyen",tags:["vege","dejeuner"],ing:["Riz arborio","Asperges vertes","Parmesan","Vin blanc","Bouillon","Beurre","Oignon"],steps:["Cuire les asperges al dente, couper en tronçons, garder les pointes.","Faire suer l'oignon, nacrer le riz, déglacer au vin blanc.","Ajouter le bouillon louche par louche en remuant.","Incorporer les asperges à mi-cuisson.","Mantecarer avec beurre et parmesan."],astuce:"Garder les pointes d'asperges pour la présentation finale."},
+{n:"Galettes de légumes",dur:"25 min",niv:"Facile",tags:["vege","rapide"],ing:["Courgettes râpées","Carottes râpées","Farine","Œufs","Herbes","Huile","Parmesan"],steps:["Râper les légumes, saler 10 min, bien presser pour enlever l'eau.","Mélanger avec œufs, farine, parmesan et herbes.","Former des galettes et faire dorer à la poêle huilée 3 min chaque face.","Servir avec une sauce yaourt à la menthe."],astuce:"Enlever un maximum d'eau des légumes râpés — c'est essentiel pour des galettes qui tiennent."},
+{n:"Curry de légumes",dur:"30 min",niv:"Facile",tags:["vege","monde"],ing:["Patate douce","Pois chiches","Épinards","Lait de coco","Curry","Tomates","Oignon","Gingembre"],steps:["Faire revenir oignon et gingembre, ajouter le curry.","Incorporer patates douces en dés et tomates.","Ajouter lait de coco et pois chiches, mijoter 20 min.","Incorporer les épinards 2 min avant la fin.","Servir sur du riz basmati."],astuce:"La patate douce apporte une douceur naturelle qui équilibre le curry."},
+// ── POISSON ──
+{n:"Bouillabaisse marseillaise",dur:"90 min",niv:"Difficile",tags:["poisson","dejeuner","monde"],ing:["Rascasse","Grondin","Saint-Pierre","Moules","Crevettes","Safran","Fenouil","Tomates","Rouille"],steps:["Préparer le bouillon avec les poissons de roche, safran et fenouil.","Filtrer le bouillon, porter à ébullition.","Pocher les poissons nobles et fruits de mer dans le bouillon.","Préparer la rouille : ail, safran, jaune d'œuf, huile d'olive.","Servir avec croûtons frottés à l'ail et rouille."],astuce:"La rouille doit être montée comme une mayo — ajouter l'huile très lentement."},
+{n:"Brandade de morue",dur:"40 min",niv:"Moyen",tags:["poisson","dejeuner"],ing:["Morue dessalée","Pommes de terre","Ail","Huile d'olive","Crème","Persil"],steps:["Pocher la morue dessalée 15 min, émietter en enlevant peaux et arêtes.","Cuire les pommes de terre à la vapeur, écraser grossièrement.","Monter la brandade : écraser morue et pommes de terre avec l'huile d'olive chaude.","Ajouter l'ail pilé et la crème, mélanger vigoureusement.","Gratiner au four 15 min, parsemer de persil."],astuce:"L'huile doit être chaude (pas bouillante) pour une brandade onctueuse."},
+{n:"Maquereaux à la moutarde",dur:"25 min",niv:"Facile",tags:["poisson","rapide"],ing:["Filets de maquereau","Moutarde à l'ancienne","Citron","Herbes","Huile d'olive"],steps:["Badigeonner les filets de moutarde à l'ancienne.","Arroser d'huile d'olive et jus de citron.","Enfourner 15 min à 200°C ou griller 8 min.","Parsemer d'herbes fraîches.","Servir avec des pommes de terre vapeur."],astuce:"Le maquereau est un poisson gras qui se marie parfaitement avec l'acidité de la moutarde."},
+{n:"Tilapia en papillote",dur:"25 min",niv:"Facile",tags:["poisson","rapide"],ing:["Filets de tilapia","Tomates cerises","Olives","Câpres","Citron","Huile d'olive","Thym"],steps:["Préchauffer le four à 200°C.","Découper une feuille de papier sulfurisé par portion.","Déposer le filet, garnir de légumes, arroser d'huile et citron.","Fermer hermétiquement la papillote.","Cuire 18 min au four."],astuce:"La papillote emprisonne les saveurs — ne pas ouvrir avant de servir."},
+{n:"Daurade grillée aux herbes",dur:"30 min",niv:"Facile",tags:["poisson","dejeuner"],ing:["Daurade entière","Fenouil","Citron","Ail","Thym","Romarin","Huile d'olive"],steps:["Vider et écailler la daurade, inciser les flancs.","Farcir avec fenouil, citron et herbes.","Huiler et assaisonner l'extérieur.","Griller ou cuire au four 20 min à 200°C en retournant à mi-cuisson.","Servir avec un filet d'huile d'olive et citron."],astuce:"Les incisions sur les flancs permettent une cuisson plus homogène et aux herbes de parfumer."},
+{n:"Tempura de crevettes",dur:"30 min",niv:"Moyen",tags:["poisson","monde"],ing:["Crevettes","Farine à tempura","Eau glacée","Huile de friture","Sauce soja","Gingembre","Daikon"],steps:["Préparer la pâte à tempura : mélanger farine et eau très froide sans trop travailler.","Décortiquer les crevettes en laissant la queue.","Tremper dans la pâte, frire à 180°C 2 min jusqu'à légère dorure.","Servir immédiatement avec sauce soja et gingembre râpé."],astuce:"La pâte doit être froide et grumeleuse — c'est ce qui donne le côté aérien."},
+{n:"Chowder de poisson",dur:"35 min",niv:"Facile",tags:["poisson","diner","monde"],ing:["Poisson blanc","Pommes de terre","Lardons","Oignon","Crème","Lait","Bouillon","Persil"],steps:["Faire revenir les lardons et l'oignon.","Ajouter pommes de terre en dés et bouillon, cuire 15 min.","Incorporer le poisson en morceaux, cuire 8 min.","Verser crème et lait, chauffer sans bouillir.","Parsemer de persil."],astuce:"Ne jamais faire bouillir le chowder après l'ajout de la crème."},
+// ── VIANDE ──
+{n:"Côte de bœuf grillée",dur:"30 min",niv:"Facile",tags:["viande","dejeuner"],ing:["Côte de bœuf","Fleur de sel","Poivre","Thym","Beurre","Ail"],steps:["Sortir la côte du frigo 1h avant cuisson.","Huiler légèrement et assaisonner uniquement au moment de cuire.","Griller ou saisir à la poêle très chaude 5 min de chaque côté.","Laisser reposer sous alu 10 min.","Servir avec fleur de sel, thym frais et beurre maître d'hôtel."],astuce:"Le repos est aussi important que la cuisson — ne jamais couper sans laisser reposer."},
+{n:"Magret de canard aux cerises",dur:"30 min",niv:"Moyen",tags:["viande","dejeuner"],ing:["Magret de canard","Cerises","Vinaigre balsamique","Miel","Fond de veau","Poivre"],steps:["Quadriller le gras du magret côté peau sans entailler la chair.","Cuire côté peau 10 min à feu moyen pour fondre le gras.","Retourner, cuire 5 min côté chair.","Laisser reposer 5 min sous alu.","Préparer la sauce : déglacer avec vinaigre et miel, ajouter les cerises et le fond."],astuce:"Commencer la cuisson à froid côté peau pour fondre le gras progressivement."},
+{n:"Porc rôti au miel",dur:"70 min",niv:"Facile",tags:["viande","dejeuner"],ing:["Filet mignon de porc","Miel","Moutarde","Sauce soja","Ail","Romarin","Thym"],steps:["Préparer la marinade : miel, moutarde, sauce soja, ail.","Badigeonner généreusement le filet et laisser mariner 1h.","Enfourner à 200°C pendant 25 min.","Arroser toutes les 10 min avec le jus de cuisson.","Laisser reposer 10 min avant de trancher."],astuce:"La marinade miel-moutarde forme une belle croûte caramélisée — surveiller la coloration."},
+{n:"Veau Marengo",dur:"90 min",niv:"Moyen",tags:["viande","dejeuner"],ing:["Veau à braiser","Tomates","Champignons","Olives","Ail","Vin blanc","Bouquet garni","Farine"],steps:["Fariner et dorer les morceaux de veau.","Ajouter oignon et ail, déglacer au vin blanc.","Incorporer tomates concassées et bouquet garni.","Mijoter 1h, ajouter champignons et olives les 15 dernières minutes.","Rectifier et servir avec pâtes ou riz."],astuce:"La sauce doit être bien réduite et nappante en fin de cuisson."},
+{n:"Escalope milanaise",dur:"20 min",niv:"Facile",tags:["viande","rapide"],ing:["Escalopes de veau","Chapelure","Œufs","Farine","Beurre","Citron","Parmesan"],steps:["Aplatir les escalopes.","Paner : farine, œuf battu, chapelure au parmesan.","Faire dorer dans le beurre mousseux 3 min de chaque côté.","Servir avec un filet de citron."],astuce:"Le beurre doit être mousseux mais pas brûlé — ajouter un filet d'huile pour éviter."},
+{n:"Agneau aux herbes",dur:"20 min",niv:"Facile",tags:["viande","rapide"],ing:["Côtelettes d'agneau","Herbes de Provence","Ail","Huile d'olive","Romarin","Citron"],steps:["Mélanger herbes, ail émincé, huile et citron.","Badigeonner les côtelettes et laisser mariner 30 min.","Cuire à la plancha ou poêle très chaude 3 min de chaque côté.","Servir avec une salade de couscous ou légumes grillés."],astuce:"L'agneau aime les herbes méditerranéennes — ne pas lésiner sur le romarin."},
+// ── CUISINE RÉGIONALE ──
+{n:"Cassoulet toulousain",dur:"180 min",niv:"Difficile",tags:["viande","dejeuner"],ing:["Haricots lingots","Confit de canard","Saucisse de Toulouse","Lardons","Tomates","Oignon","Ail","Bouquet garni"],steps:["Tremper les haricots 12h, cuire 1h dans le bouillon.","Faire revenir lardons, saucisse et confit.","Mélanger viandes et haricots dans une cassole avec tomates et ail.","Couvrir de bouillon, gratiner au four 2h à 150°C.","Casser la croûte 3 fois en cours de cuisson."],astuce:"Casser la croûte plusieurs fois permet à la sauce de pénétrer et de former une croûte encore plus belle."},
+{n:"Choucroute alsacienne",dur:"120 min",niv:"Moyen",tags:["dejeuner"],ing:["Choucroute crue","Saucisses knack","Lard fumé","Palette de porc","Vin blanc d'Alsace","Baies de genièvre","Laurier"],steps:["Rincer et presser la choucroute.","Faire dorer les viandes dans la graisse d'oie.","Ajouter choucroute, vin blanc, baies de genièvre et laurier.","Enfouir les viandes dans la choucroute, cuire 1h30 à l'étouffée.","Ajouter les saucisses les 20 dernières minutes."],astuce:"Plus la choucroute cuit longtemps, plus elle est fondante et savoureuse."},
+{n:"Gratin de macaroni au jambon",dur:"45 min",niv:"Facile",tags:["rapide"],ing:["Macaroni","Jambon blanc","Béchamel","Gruyère","Beurre","Muscade"],steps:["Cuire les macaroni al dente.","Préparer une béchamel.","Mélanger pâtes, jambon en dés et béchamel.","Verser dans un plat beurré, parsemer de gruyère.","Gratiner 20 min à 200°C."],astuce:"Légèrement sous-cuire les pâtes — elles finissent de cuire au four."},
+{n:"Chou farci",dur:"90 min",niv:"Moyen",tags:["viande","dejeuner"],ing:["Chou vert","Viande hachée mélangée","Riz","Oignon","Tomates","Herbes","Œuf"],steps:["Blanchir les feuilles de chou 5 min.","Mélanger viande, riz précuit, oignon et herbes.","Garnir chaque feuille, rouler et ficeler.","Disposer dans une cocotte, couvrir de sauce tomate.","Mijoter 1h30 à feu doux."],astuce:"Ficeler les choux farcis avant cuisson pour qu'ils ne se défassent pas."},
+{n:"Tarte flambée alsacienne",dur:"30 min",niv:"Facile",tags:["rapide","dejeuner"],ing:["Pâte fine","Crème fraîche","Fromage blanc","Lardons","Oignons émincés","Noix de muscade"],steps:["Étaler la pâte très finement.","Mélanger crème fraîche et fromage blanc, assaisonner.","Étaler la crème, disposer lardons et oignons.","Cuire 12 min au four à 250°C.","Servir immédiatement."],astuce:"La pâte doit être la plus fine possible pour une tarte flambée croustillante."},
+// ── PLATS COMPLETS ──
+{n:"Poulet aux champignons à la crème",dur:"40 min",niv:"Facile",tags:["viande"],ing:["Blancs de poulet","Champignons de Paris","Crème fraîche","Échalote","Vin blanc","Persil","Beurre"],steps:["Faire dorer les blancs de poulet, réserver.","Faire revenir échalotes et champignons dans le même beurre.","Déglacer au vin blanc, réduire.","Ajouter la crème, remettre le poulet, mijoter 15 min.","Parsemer de persil frais."],astuce:"Réduire le vin blanc avant d'ajouter la crème pour concentrer les saveurs."},
+{n:"Rôti de porc boulangère",dur:"80 min",niv:"Facile",tags:["viande","dejeuner"],ing:["Rôti de porc","Pommes de terre","Oignons","Bouillon","Laurier","Thym"],steps:["Faire dorer le rôti sur toutes faces.","Disposer dans un plat avec pommes de terre et oignons en rondelles.","Ajouter bouillon, laurier et thym.","Cuire 1h à 180°C en arrosant régulièrement."],astuce:"Le rôti boulangère se prépare à l'avance et se réchauffe très bien."},
+{n:"Côtes de porc gratinées",dur:"35 min",niv:"Facile",tags:["viande","rapide"],ing:["Côtes de porc","Moutarde","Chapelure","Herbes","Gruyère","Beurre"],steps:["Assaisonner les côtes, badigeonner de moutarde.","Mélanger chapelure, herbes et gruyère râpé.","Paner les côtes, disposer dans un plat beurré.","Cuire 25 min à 200°C jusqu'à belle dorure."],astuce:"La croûte doit être bien dorée avant de sortir du four."},
+{n:"Poulet à la normande",dur:"50 min",niv:"Moyen",tags:["viande","dejeuner"],ing:["Poulet","Pommes","Calvados","Crème fraîche","Échalotes","Cidre","Beurre","Thym"],steps:["Faire dorer les morceaux de poulet dans le beurre.","Ajouter échalotes et flamber au calvados.","Déglacer au cidre, ajouter thym et pommes en quartiers.","Mijoter 30 min, retirer le poulet.","Réduire la sauce, incorporer la crème fraîche."],astuce:"Flamber le calvados est optionnel mais apporte une profondeur aromatique unique."},
+{n:"Sauté de veau aux olives",dur:"60 min",niv:"Moyen",tags:["viande"],ing:["Sauté de veau","Olives vertes","Tomates","Ail","Vin blanc","Thym","Romarin"],steps:["Faire dorer les morceaux de veau, réserver.","Faire revenir ail et tomates dans le même sautoir.","Déglacer au vin blanc, ajouter thym et romarin.","Remettre le veau, mijoter 45 min.","Ajouter les olives 10 min avant la fin."],astuce:"Les olives en fin de cuisson évitent qu'elles deviennent trop amères."},
+{n:"Poule au pot",dur:"150 min",niv:"Facile",tags:["viande","dejeuner"],ing:["Poule","Carottes","Navets","Poireaux","Céleri","Riz","Bouquet garni","Gros sel"],steps:["Plonger la poule dans l'eau froide, porter à ébullition, écumer.","Ajouter légumes, bouquet garni et sel.","Mijoter 2h30 à frémissement.","Cuire le riz séparément dans le bouillon filtré.","Servir poule, légumes, riz et bouillon."],astuce:"La poule au pot est encore meilleure réchauffée — préparer la veille."},
+// ── RECETTES SUPPLÉMENTAIRES ──
+{n:"Salade de quinoa aux légumes rôtis",dur:"35 min",niv:"Facile",tags:["vege","rapide"],ing:["Quinoa","Poivrons","Courgettes","Aubergine","Pois chiches","Feta","Menthe","Vinaigrette citron"],steps:["Rôtir les légumes coupés en dés à 200°C pendant 20 min.","Cuire le quinoa selon les instructions.","Mélanger quinoa, légumes rôtis et pois chiches.","Ajouter feta émiettée et menthe fraîche.","Assaisonner d'une vinaigrette citron-olive."],astuce:"Le quinoa absorbe bien la vinaigrette si on l'assaisonne encore chaud."},
+{n:"Velouté de carottes au gingembre",dur:"25 min",niv:"Facile",tags:["diner","vege","rapide"],ing:["Carottes","Gingembre frais","Lait de coco","Oignon","Bouillon","Citron","Coriandre"],steps:["Faire revenir l'oignon, ajouter carottes en dés et gingembre râpé.","Mouiller au bouillon, cuire 20 min.","Mixer finement, incorporer le lait de coco.","Presser le citron, rectifier l'assaisonnement.","Garnir de coriandre fraîche."],astuce:"Le gingembre doit être frais — en poudre, il perd beaucoup de sa vivacité."},
+{n:"Pennes à l'arrabbiata",dur:"20 min",niv:"Facile",tags:["vege","rapide","monde"],ing:["Penne","Tomates concassées","Ail","Piment rouge","Huile d'olive","Basilic","Parmesan"],steps:["Faire revenir l'ail et le piment dans l'huile d'olive.","Ajouter les tomates, cuire 15 min à feu vif.","Cuire les pâtes al dente, égoutter.","Mélanger pâtes et sauce, ajouter le basilic.","Servir avec parmesan."],astuce:"L'arrabbiata doit être relevée — ne pas avoir peur du piment."},
+{n:"Brochettes de poulet mariné",dur:"30 min",niv:"Facile",tags:["viande","rapide"],ing:["Poulet","Citron","Ail","Paprika","Cumin","Huile d'olive","Poivrons","Oignons"],steps:["Couper le poulet en cubes, mariner dans citron, épices et huile 30 min.","Monter les brochettes en alternant poulet, poivrons et oignons.","Cuire à la plancha ou au barbecue 8 min en tournant.","Servir avec une sauce yaourt à l'ail."],astuce:"Faire tremper les piques en bois 30 min avant pour éviter qu'ils brûlent."},
+{n:"Spaghetti alle vongole",dur:"25 min",niv:"Moyen",tags:["poisson","rapide","monde"],ing:["Spaghetti","Palourdes","Ail","Vin blanc sec","Persil","Huile d'olive","Piment"],steps:["Purger les palourdes 1h dans l'eau salée.","Cuire les pâtes al dente.","Faire ouvrir les palourdes à feu vif avec ail et vin blanc.","Mélanger pâtes, palourdes et leur jus.","Parsemer de persil et piment."],astuce:"Garder de l'eau de cuisson des pâtes pour ajuster la consistance de la sauce."},
+{n:"Chicken wings au miel et soja",dur:"40 min",niv:"Facile",tags:["viande","monde"],ing:["Ailes de poulet","Miel","Sauce soja","Ail","Gingembre","Sésame","Ciboule"],steps:["Mélanger miel, sauce soja, ail et gingembre.","Mariner les ailes 1h, ou toute une nuit.","Cuire au four 30 min à 200°C en arrosant régulièrement.","Parsemer de sésame et ciboule.","Servir avec une sauce pimentée."],astuce:"Plus la marinade est longue, meilleure est la pénétration des arômes."},
+{n:"Tarte au citron meringuée",dur:"60 min",niv:"Difficile",tags:["vege","dejeuner"],ing:["Pâte sablée","Citrons","Œufs","Beurre","Sucre","Blancs d'œufs","Crème de tartre"],steps:["Cuire la pâte sablée à blanc.","Préparer le lemon curd : cuire au bain-marie citron, œufs, beurre et sucre jusqu'à épaississement.","Verser sur le fond de tarte refroidi.","Monter les blancs en neige avec sucre, napper la tarte.","Passer au chalumeau ou au four en position grill."],astuce:"Le lemon curd doit nappe la cuillère avant de garnir — s'il est trop liquide, la tarte coule."},
+{n:"Pavlova aux fruits rouges",dur:"90 min",niv:"Moyen",tags:["vege"],ing:["Blancs d'œufs","Sucre","Maïzena","Vinaigre blanc","Crème chantilly","Fruits rouges","Menthe"],steps:["Monter les blancs en neige ferme, incorporer sucre progressivement.","Ajouter maïzena et vinaigre, mélanger délicatement.","Façonner un disque sur plaque, creuser le centre.","Cuire 1h à 120°C, laisser refroidir dans le four éteint.","Garnir de chantilly et fruits rouges."],astuce:"La meringue doit refroidir lentement dans le four éteint — ne pas ouvrir avant complet refroidissement."},
+{n:"Crêpes sucrées maison",dur:"30 min",niv:"Facile",tags:["vege","rapide"],ing:["Farine","Œufs","Lait","Beurre","Sucre","Sel","Extrait de vanille"],steps:["Mélanger farine, œufs, sel et sucre.","Incorporer le lait progressivement pour éviter les grumeaux.","Ajouter beurre fondu et vanille, reposer 30 min.","Cuire dans une poêle légèrement beurrée, 1 min par face.","Servir avec confiture, sucre ou nutella."],astuce:"La pâte reposée donne des crêpes plus légères — si possible, préparer la veille."},
+{n:"Salade de pâtes au thon",dur:"15 min",niv:"Facile",tags:["rapide","poisson"],ing:["Pâtes","Thon en boîte","Tomates cerises","Maïs","Olives","Mayonnaise","Citron","Persil"],steps:["Cuire les pâtes al dente, refroidir sous l'eau froide.","Égoutter le thon, émietter grossièrement.","Mélanger pâtes, thon, tomates coupées, maïs et olives.","Assaisonner avec mayo, jus de citron, sel et poivre.","Parsemer de persil et réfrigérer 15 min avant de servir."],astuce:"Assaisonner les pâtes encore chaudes pour qu'elles absorbent mieux la vinaigrette."},
+{n:"Endives braisées au jambon",dur:"35 min",niv:"Facile",tags:["dejeuner"],ing:["Endives","Jambon blanc","Béchamel","Gruyère","Beurre","Citron","Noix de muscade"],steps:["Cuire les endives à la vapeur 15 min, bien les égoutter et les presser.","Rouler chaque endive dans une tranche de jambon blanc.","Disposer dans un plat beurré, napper de béchamel.","Parsemer de gruyère râpé.","Gratiner 20 min à 200°C."],astuce:"Bien presser les endives cuites pour enlever un maximum d'eau — sinon la béchamel se dilue."},
+{n:"Poulet sauté aux noix de cajou",dur:"25 min",niv:"Facile",tags:["viande","rapide","monde"],ing:["Blancs de poulet","Noix de cajou","Poivrons","Oignon","Sauce hoisin","Sauce soja","Gingembre","Ail"],steps:["Couper le poulet en dés, faire sauter à feu vif 3 min.","Retirer le poulet, faire sauter poivrons et oignon 3 min.","Ajouter ail et gingembre, 1 min.","Remettre le poulet, verser sauce hoisin et soja.","Ajouter les noix de cajou, servir sur du riz."],astuce:"Ajouter les noix de cajou en toute fin pour garder leur croquant."}
 ];
 
 function sw(t){
@@ -267,17 +218,18 @@ function sf(btn,f){
 }
 function getPool(){
   const kw=document.getElementById('cp').value.trim().toLowerCase();
-  let pool=DB;
-  if(flt==='dejeuner') pool=pool.filter(m=>m.tags.includes('dejeuner')||m.t==='dejeuner');
-  else if(flt==='diner') pool=pool.filter(m=>m.tags.includes('diner')||m.t==='diner');
+  let pool=[...DB];
+  if(flt==='dejeuner') pool=pool.filter(m=>m.tags.includes('dejeuner'));
+  else if(flt==='diner') pool=pool.filter(m=>m.tags.includes('diner'));
   else if(flt==='rapide') pool=pool.filter(m=>m.tags.includes('rapide'));
   else if(flt==='vege') pool=pool.filter(m=>m.tags.includes('vege'));
   else if(flt==='monde') pool=pool.filter(m=>m.tags.includes('monde'));
+  else if(flt==='poisson') pool=pool.filter(m=>m.tags.includes('poisson'));
+  else if(flt==='viande') pool=pool.filter(m=>m.tags.includes('viande'));
   if(kw) pool=pool.filter(m=>m.n.toLowerCase().includes(kw)||m.ing.some(i=>i.toLowerCase().includes(kw)));
   return pool.length?pool:DB;
 }
 function genR(){
-  const btn=document.getElementById('br');
   const icon=document.getElementById('bri');
   icon.classList.add('spin');
   setTimeout(()=>{
@@ -288,7 +240,7 @@ function genR(){
     document.getElementById('rr').innerHTML=`
       <div class="meal-card">
         <div class="mc-top">
-          <div class="mc-lbl">Recette du moment</div>
+          <div class="mc-lbl">✦ Recette</div>
           <div class="mc-name">${m.n}</div>
           <div class="mc-meta">
             <span class="mc-chip">⏱ ${m.dur}</span>
@@ -300,7 +252,7 @@ function genR(){
           <div class="tags">${ings}</div>
           <div class="slbl">Préparation</div>
           <ul class="steps">${steps}</ul>
-          <div class="slbl">Astuce</div>
+          <div class="slbl">Astuce du chef</div>
           <div class="astuce">💡 ${m.astuce}</div>
         </div>
       </div>`;
@@ -309,8 +261,8 @@ function genR(){
 }
 const DAYS_W=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
 function genW(){
-  const lpool=DB.filter(m=>!m.tags.includes('diner'));
-  const dpool=DB.filter(m=>!m.tags.includes('dejeuner'));
+  const lp=DB.filter(m=>m.tags.includes('dejeuner')||(!m.tags.includes('diner')));
+  const dp=DB.filter(m=>m.tags.includes('diner')||(!m.tags.includes('dejeuner')));
   let used=new Set();
   function pick(pool){
     let c=pool.filter(m=>!used.has(m.n));
@@ -318,8 +270,8 @@ function genW(){
     const m=c[Math.floor(Math.random()*c.length)];
     used.add(m.n); return m;
   }
-  const html=DAYS_W.map(day=>{
-    const l=pick(lpool); const d=pick(dpool);
+  document.getElementById('wg').innerHTML=DAYS_W.map(day=>{
+    const l=pick(lp),d=pick(dp);
     return `<div class="day-card">
       <div class="dh"><span class="dn">${day}</span><span style="font-size:.72rem;color:var(--muted)">2 repas</span></div>
       <div class="ds">
@@ -338,7 +290,6 @@ function genW(){
       </div>
     </div>`;
   }).join('');
-  document.getElementById('wg').innerHTML=html;
 }
 </script>
 </body>
